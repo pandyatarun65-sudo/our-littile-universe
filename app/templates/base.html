@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Our Little Universe{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    {% if current_user.is_authenticated %}
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="{{ url_for('main.dashboard') }}" class="brand">
+                <span class="brand-orbit" aria-hidden="true"><span class="brand-dot"></span></span>
+                Our Little Universe
+            </a>
+            <nav class="main-nav">
+                <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('main.timeline') }}" class="{% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            </nav>
+        </div>
+    </header>
+    {% endif %}
+
+    <main class="page-content fade-in">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <p class="flash">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

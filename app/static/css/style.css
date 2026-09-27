@@ -1,0 +1,375 @@
+/* ---------- Design tokens ---------- */
+:root {
+    --color-bg: #fbf6f2;
+    --color-surface: #ffffff;
+    --color-text: #362b31;
+    --color-text-soft: #8a767c;
+    --color-accent: #7c5c6b;        /* muted plum */
+    --color-accent-deep: #5e4351;   /* deeper plum for hover states */
+    --color-accent-soft: #f0dfe3;   /* blush */
+    --color-gold: #cfa77a;          /* warm gold, used sparingly */
+    --color-border: #efe1e4;
+    --shadow-soft: 0 8px 24px rgba(58, 47, 53, 0.08);
+    --shadow-hover: 0 14px 34px rgba(58, 47, 53, 0.14);
+    --radius: 16px;
+    --font-heading: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Reset ---------- */
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--color-bg);
+    background-image: radial-gradient(circle at 15% 0%, #f6ece7 0%, transparent 45%),
+                       radial-gradient(circle at 100% 20%, #f3e4e9 0%, transparent 40%);
+    background-attachment: fixed;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--color-accent); text-decoration: none; transition: color 0.2s ease; }
+a:hover { text-decoration: none; color: var(--color-accent-deep); }
+
+/* ---------- Header / nav ---------- */
+.site-header {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.35rem;
+    color: var(--color-text);
+    letter-spacing: 0.01em;
+}
+.brand:hover { text-decoration: none; color: var(--color-text); }
+
+/* Small orbiting dot next to the brand name — a quiet nod to "Universe" */
+.brand-orbit {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--color-accent);
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.brand-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    top: 50%;
+    left: 50%;
+    transform-origin: -1px -1px;
+    animation: orbit 6s linear infinite;
+}
+@keyframes orbit {
+    from { transform: rotate(0deg) translateX(7px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(7px) rotate(-360deg); }
+}
+
+.main-nav a {
+    margin-left: 20px;
+    color: var(--color-text-soft);
+    font-size: 0.92rem;
+    font-weight: 500;
+    padding-bottom: 4px;
+    border-bottom: 1px solid transparent;
+}
+.main-nav a:hover { color: var(--color-accent); }
+.main-nav a.active {
+    color: var(--color-accent-deep);
+    border-bottom-color: var(--color-accent-deep);
+}
+
+/* ---------- Layout ---------- */
+.page-content { max-width: 900px; margin: 0 auto; padding: 40px 20px 70px; }
+.container { width: 100%; }
+
+.page-title {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 2.4rem;
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+}
+.page-subtitle { color: var(--color-text-soft); margin-top: 0; margin-bottom: 34px; font-size: 1.02rem; }
+.section-title {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 36px 0 18px;
+}
+
+/* ---------- Flash messages ---------- */
+.flash-messages { margin-bottom: 20px; }
+.flash {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-deep);
+    padding: 11px 18px;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+}
+
+/* ---------- Login page ---------- */
+.login-wrapper {
+    position: relative;
+    min-height: 86vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* Soft ambient glow behind the card, kept subtle so it stays elegant */
+.login-glow {
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(207, 167, 122, 0.16) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.login-card {
+    position: relative;
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    padding: 46px 40px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+}
+
+.login-orbit {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    border: 1px solid var(--color-accent-soft);
+}
+.login-orbit-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    top: 50%;
+    left: 50%;
+    transform-origin: -1px -1px;
+    animation: orbit 5s linear infinite;
+}
+
+.login-title {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 2rem;
+    margin: 0 0 6px;
+}
+
+.login-subtitle {
+    color: var(--color-text-soft);
+    font-size: 0.92rem;
+    margin: 0 0 28px;
+}
+
+.login-card form { text-align: left; }
+
+.login-card label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-text-soft);
+    margin: 16px 0 6px;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-card input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.login-card button {
+    width: 100%;
+    margin-top: 26px;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.login-card button:hover { background: var(--color-accent-deep); transform: translateY(-1px); }
+.login-card button:active { transform: translateY(0); }
+
+/* ---------- Cards / grid (dashboard) ---------- */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+}
+
+.memory-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.memory-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* CSS-generated placeholder instead of a real photo — a different soft
+   gradient angle per card position so the grid doesn't feel repetitive */
+.memory-placeholder {
+    height: 116px;
+    background: linear-gradient(135deg, var(--color-accent-soft), var(--color-accent));
+}
+.card-grid .memory-card:nth-child(2) .memory-placeholder {
+    background: linear-gradient(135deg, #f0e6d8, var(--color-gold));
+}
+.card-grid .memory-card:nth-child(3) .memory-placeholder {
+    background: linear-gradient(135deg, #e6dce8, #8a7091);
+}
+
+.memory-card-body { padding: 18px 20px; }
+.memory-card-body h3 {
+    margin: 6px 0 8px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+.memory-card-body p { margin: 0; color: var(--color-text-soft); font-size: 0.93rem; }
+
+.memory-date {
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.empty-state { color: var(--color-text-soft); font-style: italic; }
+
+.link-more {
+    display: inline-block;
+    margin-top: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+}
+.link-more:hover { border-bottom-color: var(--color-accent-deep); }
+
+/* ---------- Timeline ---------- */
+.timeline {
+    position: relative;
+    padding-left: 26px;
+    border-left: 2px solid var(--color-border);
+}
+
+.timeline-item {
+    position: relative;
+    padding: 0 0 32px 22px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -33px;
+    top: 4px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: 3px solid var(--color-bg);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.timeline-content {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    padding: 18px 22px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.timeline-content:hover {
+    transform: translateX(3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.timeline-content h3 {
+    margin: 6px 0 8px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+.timeline-content p { margin: 0 0 8px; color: var(--color-text); }
+.memory-author { font-size: 0.78rem; color: var(--color-text-soft); }
+
+/* ---------- Simple, lightweight animation ---------- */
+.fade-in {
+    animation: fadeIn 0.55s ease both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Mobile responsiveness ---------- */
+@media (max-width: 600px) {
+    .header-inner { flex-direction: column; align-items: flex-start; }
+    .main-nav a { margin-left: 0; margin-right: 18px; }
+    .page-title { font-size: 1.8rem; }
+    .login-card { padding: 36px 26px; }
+}

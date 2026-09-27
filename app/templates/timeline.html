@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Timeline — Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Our Timeline</h1>
+    <p class="page-subtitle">Every memory, in order.</p>
+
+    {% if memories %}
+    <div class="timeline">
+        {% for memory in memories %}
+        <div class="timeline-item fade-in">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
+                <h3>{{ memory.title }}</h3>
+                <p>{{ memory.description }}</p>
+                <span class="memory-author">— added by {{ memory.author.name }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">No memories yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
