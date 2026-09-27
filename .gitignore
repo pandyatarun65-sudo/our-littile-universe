@@ -1,14 +1,8 @@
-# Python
 venv/
 __pycache__/
 *.pyc
-
-# Environment variables / secrets
 .env
-
-# Database and uploads (personal data, don't commit)
 instance/
-
-# OS/editor junk
+app/static/uploads/
 .DS_Store
 .vscode/

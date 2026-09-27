@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Gallery — Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Gallery</h1>
+    <p class="page-subtitle">Every photo, in one place.</p>
+
+    {% if photos %}
+    <div class="gallery-grid">
+        {% for photo in photos %}
+        <button type="button" class="gallery-item fade-in"
+                data-src="{{ url_for('static', filename=photo.file_path) }}"
+                data-caption="{{ photo.caption or '' }}">
+            <img src="{{ url_for('static', filename=photo.file_path) }}" alt="{{ photo.caption or 'Memory photo' }}">
+        </button>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">No photos yet — add one from a memory to see it here.</p>
+    {% endif %}
+</div>
+
+<div id="lightbox" class="lightbox" hidden>
+    <button type="button" id="lightbox-close" class="lightbox-close" aria-label="Close">&times;</button>
+    <img id="lightbox-image" src="" alt="">
+    <p id="lightbox-caption" class="lightbox-caption"></p>
+</div>
+{% endblock %}

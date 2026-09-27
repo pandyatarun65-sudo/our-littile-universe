@@ -16,7 +16,6 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # This lets you write user.memories to get all memories they created.
     memories = db.relationship('Memory', backref='author', lazy=True)
 
     def __repr__(self):
@@ -31,5 +30,18 @@ class Memory(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    photos = db.relationship('Photo', backref='memory', lazy=True, cascade='all, delete-orphan')
+
     def __repr__(self):
         return f'<Memory {self.title}>'
+
+
+class Photo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    memory_id = db.Column(db.Integer, db.ForeignKey('memory.id'), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+    caption = db.Column(db.String(255), nullable=True)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Photo {self.file_path}>'

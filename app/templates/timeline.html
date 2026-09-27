@@ -14,14 +14,29 @@
             <div class="timeline-content">
                 <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
                 <h3>{{ memory.title }}</h3>
+
+                {% if memory.photos %}
+                <img class="timeline-photo" src="{{ url_for('static', filename=memory.photos[0].file_path) }}"
+                     alt="{{ memory.photos[0].caption or memory.title }}">
+                {% endif %}
+
                 <p>{{ memory.description }}</p>
-                <span class="memory-author">— added by {{ memory.author.name }}</span>
+                <div class="timeline-meta">
+                    <span class="memory-author">— added by {{ memory.author.name }}</span>
+                    <div class="memory-actions">
+                        <a href="{{ url_for('main.edit_memory', memory_id=memory.id) }}">Edit</a>
+                        <form method="POST" action="{{ url_for('main.delete_memory', memory_id=memory.id) }}"
+                              onsubmit="return confirm('Delete this memory? This cannot be undone.');">
+                            <button type="submit" class="delete-link">Delete</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <p class="empty-state">No memories yet.</p>
+    <p class="empty-state">No memories yet. <a href="{{ url_for('main.add_memory') }}">Add the first one</a>.</p>
     {% endif %}
 </div>
 {% endblock %}

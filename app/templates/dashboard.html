@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% block title %}Dashboard — Our Little Universe{% endblock %}
 
@@ -12,7 +13,13 @@
     <div class="card-grid">
         {% for memory in memories %}
         <div class="memory-card fade-in">
+            {% if memory.photos %}
+            <img class="memory-placeholder memory-photo-cover"
+                 src="{{ url_for('static', filename=memory.photos[0].file_path) }}"
+                 alt="{{ memory.photos[0].caption or memory.title }}">
+            {% else %}
             <div class="memory-placeholder"></div>
+            {% endif %}
             <div class="memory-card-body">
                 <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
                 <h3>{{ memory.title }}</h3>
@@ -22,7 +29,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="empty-state">No memories yet. Your story starts here.</p>
+    <p class="empty-state">No memories yet. <a href="{{ url_for('main.add_memory') }}">Add the first one</a>.</p>
     {% endif %}
 
     <a href="{{ url_for('main.timeline') }}" class="link-more">View the full timeline &rarr;</a>

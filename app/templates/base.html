@@ -21,6 +21,12 @@
             <nav class="main-nav">
                 <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
                 <a href="{{ url_for('main.timeline') }}" class="{% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a>
+                <a href="{{ url_for('main.gallery') }}" class="{% if request.endpoint == 'main.gallery' %}active{% endif %}">Gallery</a>
+                <a href="{{ url_for('main.add_memory') }}" class="{% if request.endpoint == 'main.add_memory' %}active{% endif %}">Add Memory</a>
+                <form class="nav-search" method="GET" action="{{ url_for('main.search') }}">
+                    <input type="text" name="q" placeholder="Search..." aria-label="Search memories">
+                </form>
+                <a href="{{ url_for('main.search') }}" class="mobile-search-link {% if request.endpoint == 'main.search' %}active{% endif %}">Search</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
             </nav>
         </div>
