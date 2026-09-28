@@ -8,26 +8,33 @@
     <form method="GET" action="{{ url_for('main.search') }}" class="search-form">
         <input type="text" name="q" placeholder="Search by title or description..."
                value="{{ query }}" autofocus>
-        <button type="submit">Search</button>
+        <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
     {% if query %}
         {% if results %}
         <div class="timeline">
-            {% for memory in results %}
-            <div class="timeline-item fade-in">
-                <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                    <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
-                    <h3>{{ memory.title }}</h3>
-                    <p>{{ memory.description }}</p>
-                    <span class="memory-author">— added by {{ memory.author.name }}</span>
+            <div class="timeline-line" aria-hidden="true"></div>
+            <div class="timeline-rows">
+                {% for memory in results %}
+                <div class="timeline-row fade-in">
+                    <div class="timeline-node"></div>
+                    <div class="timeline-card">
+                        <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
+                        <h3>{{ memory.title }}</h3>
+                        <p>{{ memory.description }}</p>
+                        <span class="memory-author">— added by {{ memory.author.name }}</span>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
         {% else %}
-        <p class="empty-state">No memories match "{{ query }}".</p>
+        <div class="empty-state-card fade-in">
+            <div class="empty-state-icon" aria-hidden="true"></div>
+            <h2 class="empty-state-title">No matches</h2>
+            <p class="empty-state-text">Nothing matches "{{ query }}". Try a different word.</p>
+        </div>
         {% endif %}
     {% endif %}
 </div>

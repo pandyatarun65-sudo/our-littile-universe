@@ -8,34 +8,35 @@
         {% if memory %}Update the details below.{% else %}Add a new page to your story.{% endif %}
     </p>
 
-    <form method="POST" enctype="multipart/form-data" class="memory-form">
+    <form method="POST" enctype="multipart/form-data" class="memory-form card">
         <label for="title">Title</label>
         <input type="text" id="title" name="title" required
-               value="{{ memory.title if memory else '' }}">
+               value="{{ memory.title if memory else '' }}" placeholder="A name for this memory">
 
         <label for="memory_date">Date</label>
         <input type="date" id="memory_date" name="memory_date" required
                value="{{ memory.memory_date.isoformat() if memory else '' }}">
 
         <label for="description">Description</label>
-        <textarea id="description" name="description" rows="5">{{ memory.description if memory else '' }}</textarea>
+        <textarea id="description" name="description" rows="5"
+                  placeholder="What made this moment special?">{{ memory.description if memory else '' }}</textarea>
 
-        {% if memory and memory.photos %}
-        <div class="current-photo">
-            <span class="field-label">Current photo</span>
-            <img src="{{ url_for('static', filename=memory.photos[0].file_path) }}" alt="Current memory photo">
+        <label>{% if memory and memory.photos %}Replace photo (optional){% else %}Photo (optional){% endif %}</label>
+        <div class="upload-dropzone" id="uploadDropzone">
+            <div class="upload-preview" id="uploadPreview"
+                 {% if memory and memory.photos %}style="background-image: url('{{ url_for('static', filename=memory.photos[0].file_path) }}');"{% endif %}>
+                <span class="upload-placeholder-text" id="uploadPlaceholderText"
+                      {% if memory and memory.photos %}hidden{% endif %}>Click to choose a photo</span>
+            </div>
+            <input type="file" id="photo" name="photo" accept=".jpg,.jpeg,.png,.gif,.webp" class="upload-input">
         </div>
-        {% endif %}
-
-        <label for="photo">{% if memory and memory.photos %}Replace photo (optional){% else %}Photo (optional){% endif %}</label>
-        <input type="file" id="photo" name="photo" accept=".jpg,.jpeg,.png,.gif,.webp">
 
         <label for="caption">Photo caption (optional)</label>
         <input type="text" id="caption" name="caption"
-               value="{{ memory.photos[0].caption if memory and memory.photos else '' }}">
+               value="{{ memory.photos[0].caption if memory and memory.photos else '' }}" placeholder="A short caption">
 
         <div class="form-actions">
-            <button type="submit">{% if memory %}Save Changes{% else %}Add Memory{% endif %}</button>
+            <button type="submit" class="btn btn-primary">{% if memory %}Save Changes{% else %}Add Memory{% endif %}</button>
             <a href="{{ url_for('main.timeline') }}" class="cancel-link">Cancel</a>
         </div>
     </form>

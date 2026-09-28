@@ -1,37 +1,70 @@
-
 {% extends 'base.html' %}
 {% block title %}Dashboard — Our Little Universe{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="page-title">Welcome back, {{ current_user.name }}</h1>
-    <p class="page-subtitle">Here's a little piece of your story.</p>
+    <section class="hero-greeting fade-in">
+        <p class="eyebrow">{{ greeting }}, {{ current_user.name }}</p>
+        <h1 class="page-title">Welcome back to your universe.</h1>
+        <p class="page-subtitle">Every memory here is a small piece of us.</p>
+    </section>
 
-    <h2 class="section-title">Recent Memories</h2>
+    <section class="stats-grid">
+        <div class="stat-card fade-in">
+            <span class="stat-label">Memories</span>
+            <span class="stat-value">{{ memory_count }}</span>
+            <span class="stat-hint">moments kept safe</span>
+        </div>
 
-    {% if memories %}
-    <div class="card-grid">
-        {% for memory in memories %}
-        <div class="memory-card fade-in">
-            {% if memory.photos %}
-            <img class="memory-placeholder memory-photo-cover"
-                 src="{{ url_for('static', filename=memory.photos[0].file_path) }}"
-                 alt="{{ memory.photos[0].caption or memory.title }}">
+        <div class="stat-card stat-card-photo fade-in">
+            <span class="stat-label">Latest Photo</span>
+            {% if latest_photo %}
+            <img class="stat-photo" src="{{ url_for('static', filename=latest_photo.file_path) }}"
+                 alt="{{ latest_photo.caption or 'Latest memory photo' }}">
             {% else %}
-            <div class="memory-placeholder"></div>
+            <div class="stat-photo stat-photo-empty"></div>
+            <span class="stat-hint">No photos yet</span>
             {% endif %}
-            <div class="memory-card-body">
-                <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
-                <h3>{{ memory.title }}</h3>
-                <p>{{ memory.description }}</p>
+        </div>
+
+        <div class="stat-card fade-in">
+            <span class="stat-label">Upcoming</span>
+            <span class="stat-value stat-value-placeholder">—</span>
+            <span class="stat-hint">Special dates, coming soon</span>
+        </div>
+    </section>
+
+    {% if latest_memory %}
+    <section class="featured-memory fade-in">
+        <span class="field-label">Most recent memory</span>
+        <div class="featured-card">
+            {% if latest_memory.photos %}
+            <img class="featured-photo" src="{{ url_for('static', filename=latest_memory.photos[0].file_path) }}"
+                 alt="{{ latest_memory.title }}">
+            {% else %}
+            <div class="featured-photo featured-photo-empty"></div>
+            {% endif %}
+            <div class="featured-body">
+                <span class="memory-date">{{ latest_memory.memory_date.strftime('%d %B %Y') }}</span>
+                <h2>{{ latest_memory.title }}</h2>
+                <p>{{ latest_memory.description }}</p>
+                <a href="{{ url_for('main.timeline') }}" class="link-more">View full timeline &rarr;</a>
             </div>
         </div>
-        {% endfor %}
-    </div>
+    </section>
     {% else %}
-    <p class="empty-state">No memories yet. <a href="{{ url_for('main.add_memory') }}">Add the first one</a>.</p>
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <h2 class="empty-state-title">Your story starts here</h2>
+        <p class="empty-state-text">Add your first memory to begin building your timeline.</p>
+        <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary">Add a Memory</a>
+    </div>
     {% endif %}
 
-    <a href="{{ url_for('main.timeline') }}" class="link-more">View the full timeline &rarr;</a>
+    <section class="quick-actions fade-in">
+        <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary">+ Add Memory</a>
+        <a href="{{ url_for('main.gallery') }}" class="btn btn-ghost">View Gallery</a>
+        <a href="{{ url_for('main.search') }}" class="btn btn-ghost">Search</a>
+    </section>
 </div>
 {% endblock %}

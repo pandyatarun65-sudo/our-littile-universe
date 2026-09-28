@@ -19,6 +19,7 @@ def create_app():
 
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to continue.'
+    login_manager.login_message_category = 'error'
 
     from app.auth.routes import auth_bp
     from app.main.routes import main_bp

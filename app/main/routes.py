@@ -12,8 +12,25 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 @login_required
 def dashboard():
-    recent_memories = Memory.query.order_by(Memory.memory_date.desc()).limit(3).all()
-    return render_template('dashboard.html', memories=recent_memories)
+    memory_count = Memory.query.count()
+    latest_memory = Memory.query.order_by(Memory.memory_date.desc()).first()
+    latest_photo = Photo.query.order_by(Photo.uploaded_at.desc()).first()
+
+    hour = datetime.now().hour
+    if hour < 12:
+        greeting = 'Good morning'
+    elif hour < 18:
+        greeting = 'Good afternoon'
+    else:
+        greeting = 'Good evening'
+
+    return render_template(
+        'dashboard.html',
+        latest_memory=latest_memory,
+        memory_count=memory_count,
+        latest_photo=latest_photo,
+        greeting=greeting,
+    )
 
 
 @main_bp.route('/timeline')
@@ -37,13 +54,13 @@ def add_memory():
         caption = request.form.get('caption', '').strip()
 
         if not title or not memory_date_str:
-            flash('Title and date are required.')
+            flash('Title and date are required.', 'error')
             return render_template('memory_form.html', memory=None, form_title='Add a Memory')
 
         try:
             memory_date = _parse_memory_date(memory_date_str)
         except ValueError:
-            flash('That date doesn\'t look right — please pick it from the date field.')
+            flash('That date doesn\'t look right — please pick it from the date field.', 'error')
             return render_template('memory_form.html', memory=None, form_title='Add a Memory')
 
         memory = Memory(
@@ -63,9 +80,9 @@ def add_memory():
                 db.session.add(photo)
                 db.session.commit()
             else:
-                flash('Memory saved, but that photo type isn\'t supported (use jpg, png, gif or webp).')
+                flash('Memory saved, but that photo type isn\'t supported (use jpg, png, gif or webp).', 'error')
 
-        flash('Memory added!')
+        flash('Memory added!', 'success')
         return redirect(url_for('main.timeline'))
 
     return render_template('memory_form.html', memory=None, form_title='Add a Memory')
@@ -83,13 +100,13 @@ def edit_memory(memory_id):
         caption = request.form.get('caption', '').strip()
 
         if not title or not memory_date_str:
-            flash('Title and date are required.')
+            flash('Title and date are required.', 'error')
             return render_template('memory_form.html', memory=memory, form_title='Edit Memory')
 
         try:
             memory.memory_date = _parse_memory_date(memory_date_str)
         except ValueError:
-            flash('That date doesn\'t look right — please pick it from the date field.')
+            flash('That date doesn\'t look right — please pick it from the date field.', 'error')
             return render_template('memory_form.html', memory=memory, form_title='Edit Memory')
 
         memory.title = title
@@ -104,10 +121,10 @@ def edit_memory(memory_id):
                     db.session.delete(old_photo)
                 db.session.add(Photo(memory_id=memory.id, file_path=saved_path, caption=caption))
             else:
-                flash('That photo type isn\'t supported (use jpg, png, gif or webp) — kept the existing one.')
+                flash('That photo type isn\'t supported (use jpg, png, gif or webp) — kept the existing one.', 'error')
 
         db.session.commit()
-        flash('Memory updated!')
+        flash('Memory updated!', 'success')
         return redirect(url_for('main.timeline'))
 
     return render_template('memory_form.html', memory=memory, form_title='Edit Memory')
@@ -124,7 +141,7 @@ def delete_memory(memory_id):
     db.session.delete(memory)
     db.session.commit()
 
-    flash('Memory deleted.')
+    flash('Memory deleted.', 'success')
     return redirect(url_for('main.timeline'))
 
 

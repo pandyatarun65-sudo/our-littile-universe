@@ -8,35 +8,43 @@
 
     {% if memories %}
     <div class="timeline">
-        {% for memory in memories %}
-        <div class="timeline-item fade-in">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
-                <h3>{{ memory.title }}</h3>
+        <div class="timeline-line" aria-hidden="true"></div>
+        <div class="timeline-rows">
+            {% for memory in memories %}
+            <div class="timeline-row fade-in">
+                <div class="timeline-node"></div>
+                <div class="timeline-card">
+                    <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
+                    <h3>{{ memory.title }}</h3>
 
-                {% if memory.photos %}
-                <img class="timeline-photo" src="{{ url_for('static', filename=memory.photos[0].file_path) }}"
-                     alt="{{ memory.photos[0].caption or memory.title }}">
-                {% endif %}
+                    {% if memory.photos %}
+                    <img class="timeline-photo" src="{{ url_for('static', filename=memory.photos[0].file_path) }}"
+                         alt="{{ memory.photos[0].caption or memory.title }}">
+                    {% endif %}
 
-                <p>{{ memory.description }}</p>
-                <div class="timeline-meta">
-                    <span class="memory-author">— added by {{ memory.author.name }}</span>
-                    <div class="memory-actions">
-                        <a href="{{ url_for('main.edit_memory', memory_id=memory.id) }}">Edit</a>
-                        <form method="POST" action="{{ url_for('main.delete_memory', memory_id=memory.id) }}"
-                              onsubmit="return confirm('Delete this memory? This cannot be undone.');">
-                            <button type="submit" class="delete-link">Delete</button>
-                        </form>
+                    <p>{{ memory.description }}</p>
+                    <div class="timeline-meta">
+                        <span class="memory-author">— added by {{ memory.author.name }}</span>
+                        <div class="memory-actions">
+                            <a href="{{ url_for('main.edit_memory', memory_id=memory.id) }}">Edit</a>
+                            <form method="POST" action="{{ url_for('main.delete_memory', memory_id=memory.id) }}"
+                                  onsubmit="return confirm('Delete this memory? This cannot be undone.');">
+                                <button type="submit" class="delete-link">Delete</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
     {% else %}
-    <p class="empty-state">No memories yet. <a href="{{ url_for('main.add_memory') }}">Add the first one</a>.</p>
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <h2 class="empty-state-title">No memories yet</h2>
+        <p class="empty-state-text">Your timeline is waiting for its first entry.</p>
+        <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary">Add the first one</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

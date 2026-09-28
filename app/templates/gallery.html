@@ -13,11 +13,19 @@
                 data-src="{{ url_for('static', filename=photo.file_path) }}"
                 data-caption="{{ photo.caption or '' }}">
             <img src="{{ url_for('static', filename=photo.file_path) }}" alt="{{ photo.caption or 'Memory photo' }}">
+            {% if photo.caption %}
+            <span class="gallery-caption">{{ photo.caption }}</span>
+            {% endif %}
         </button>
         {% endfor %}
     </div>
     {% else %}
-    <p class="empty-state">No photos yet — add one from a memory to see it here.</p>
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <h2 class="empty-state-title">No photos yet</h2>
+        <p class="empty-state-text">Add a photo from a memory to see it here.</p>
+        <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary">Add a Memory</a>
+    </div>
     {% endif %}
 </div>
 

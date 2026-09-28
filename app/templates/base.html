@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#fbf6f2">
     <title>{% block title %}Our Little Universe{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,27 +19,33 @@
                 <span class="brand-orbit" aria-hidden="true"><span class="brand-dot"></span></span>
                 Our Little Universe
             </a>
-            <nav class="main-nav">
-                <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
-                <a href="{{ url_for('main.timeline') }}" class="{% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a>
-                <a href="{{ url_for('main.gallery') }}" class="{% if request.endpoint == 'main.gallery' %}active{% endif %}">Gallery</a>
-                <a href="{{ url_for('main.add_memory') }}" class="{% if request.endpoint == 'main.add_memory' %}active{% endif %}">Add Memory</a>
+
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            <nav class="main-nav" id="mainNav">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('main.timeline') }}" class="nav-link {% if request.endpoint == 'main.timeline' %}active{% endif %}">Timeline</a>
+                <a href="{{ url_for('main.gallery') }}" class="nav-link {% if request.endpoint == 'main.gallery' %}active{% endif %}">Gallery</a>
+
                 <form class="nav-search" method="GET" action="{{ url_for('main.search') }}">
                     <input type="text" name="q" placeholder="Search..." aria-label="Search memories">
                 </form>
-                <a href="{{ url_for('main.search') }}" class="mobile-search-link {% if request.endpoint == 'main.search' %}active{% endif %}">Search</a>
-                <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+                <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary btn-sm nav-add">+ Add Memory</a>
+                <a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout">Logout</a>
             </nav>
         </div>
     </header>
     {% endif %}
 
     <main class="page-content fade-in">
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
-                    {% for message in messages %}
-                        <p class="flash">{{ message }}</p>
+                    {% for category, message in messages %}
+                        <p class="flash flash-{{ category }}">{{ message }}</p>
                     {% endfor %}
                 </div>
             {% endif %}

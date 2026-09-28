@@ -1,9 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const fadeItems = document.querySelectorAll('.memory-card, .timeline-item, .gallery-item');
-
+    const fadeItems = document.querySelectorAll('.timeline-row, .gallery-item, .stat-card');
     fadeItems.forEach((item, index) => {
-        item.style.animationDelay = `${index * 80}ms`;
+        item.style.animationDelay = `${index * 70}ms`;
     });
+
+    const navToggle = document.getElementById('navToggle');
+    const mainNav = document.getElementById('mainNav');
+    if (navToggle && mainNav) {
+        navToggle.addEventListener('click', () => {
+            const isOpen = mainNav.classList.toggle('is-open');
+            navToggle.classList.toggle('is-active', isOpen);
+            navToggle.setAttribute('aria-expanded', isOpen);
+        });
+    }
+
+    const photoInput = document.getElementById('photo');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const placeholderText = document.getElementById('uploadPlaceholderText');
+    if (photoInput && uploadPreview) {
+        photoInput.addEventListener('change', () => {
+            const file = photoInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                uploadPreview.style.backgroundImage = `url(${event.target.result})`;
+                if (placeholderText) placeholderText.hidden = true;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     const lightbox = document.getElementById('lightbox');
     if (!lightbox) return;
