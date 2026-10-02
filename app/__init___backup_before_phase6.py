@@ -42,15 +42,11 @@ def create_app(config_class=None):
     from app.main.routes import main_bp
     from app.surprises.routes import surprises_bp
     from app.smart.routes import smart_bp
-    from app.chat.routes import chat_bp
-    from app.notifications.routes import notifications_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(surprises_bp)
     app.register_blueprint(smart_bp)
-    app.register_blueprint(chat_bp)
-    app.register_blueprint(notifications_bp)
 
     # Robust date formatter supporting strings, datetime, and date objects
     @app.template_filter('date_format')

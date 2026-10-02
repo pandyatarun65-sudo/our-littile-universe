@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">Little signals</p>
+            <h1 class="page-title">Notifications</h1>
+        </div>
+        {% if unread_notification_count %}
+        <form method="POST" action="{{ url_for('notifications.notifications_read_all') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-ghost">Mark all as read</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if items %}
+    <ul class="notif-list">
+        {% for n in items %}
+        <li class="notif-item {{ '' if n.is_read else 'is-unread' }}">
+            <a class="notif-main" href="{{ url_for('notifications.notification_go', notification_id=n.id) }}">
+                <span class="notif-title">{{ n.title }}</span>
+                {% if n.body %}<span class="notif-message">{{ n.body }}</span>{% endif %}
+                <time class="notif-time" data-utc="{{ iso_utc(n.created_at) }}">{{ n.created_at.strftime('%d %b %Y, %H:%M') }} UTC</time>
+            </a>
+            {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('notifications.notification_read', notification_id=n.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="notif-mark">Mark read</button>
+            </form>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <h2 class="empty-state-title">All quiet</h2>
+        <p class="empty-state-text">New messages, letters and unlocked surprises will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

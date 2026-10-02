@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ letter.title }} &middot; Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="reading-container">
+    {% if locked %}
+        <!-- LOCKED CHAMBER (Server-side sanitized: body is never transmitted) -->
+        <div class="glass-card locked-chamber">
+            <div class="wax-lock-icon">🔒</div>
+            <h1 class="chamber-title">{{ letter.title }}</h1>
+            <p class="chamber-subtitle">Something sweet has been prepared for you.</p>
+
+            {% if letter.cover_hint %}
+                <div class="chamber-hint-box">
+                    <p class="chamber-hint-text">"{{ letter.cover_hint }}"</p>
+                </div>
+            {% endif %}
+
+            <div class="chamber-date-banner">
+                <p>Come back on <strong>{{ letter.unlock_date.strftime('%B %d, %Y') }}</strong></p>
+                <span class="countdown-badge">{{ letter.days_remaining() }} days remaining</span>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ url_for('surprises.letters_index') }}" class="btn btn-secondary">Return to Universe</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- UNLOCKED PARCHMENT LETTER -->
+        <article class="glass-card parchment-card">
+            <header class="parchment-header">
+                <div class="parchment-stamp">💌</div>
+                <h1 class="parchment-title">{{ letter.title }}</h1>
+                <div class="parchment-meta">
+                    <span>Written by {{ letter.sender.display_name }}</span>
+                    <span>&bull;</span>
+                    <span>For {{ letter.recipient.display_name }}</span>
+                    <span>&bull;</span>
+                    <span>{{ letter.created_at.strftime('%B %d, %Y') }}</span>
+                </div>
+                {% if is_author and letter.unlock_date and not letter.is_unlocked() %}
+                    <div class="author-lock-notice">
+                        🔒 Note for author: Your partner cannot open this until {{ letter.unlock_date.strftime('%B %d, %Y') }}.
+                    </div>
+                {% endif %}
+            </header>
+
+            <div class="parchment-body">
+                {{ letter.body }}
+            </div>
+
+            <footer class="parchment-footer">
+                <p class="parchment-closing">Always with love,</p>
+                <p class="parchment-author">{{ letter.sender.display_name }}</p>
+            </footer>
+
+            <div class="card-footer-flex mt-4">
+                <a href="javascript:history.back();" class="btn btn-secondary">&larr; Back</a>
+                {% if is_author %}
+                    <a href="{{ url_for('surprises.letter_edit', letter_id=letter.id) }}" class="btn btn-primary">Edit Letter</a>
+                {% endif %}
+            </div>
+        </article>
+    {% endif %}
+</div>
+{% endblock %}

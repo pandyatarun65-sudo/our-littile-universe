@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}{{ form_title }} — Our Little Universe{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/phase5.css') }}">{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">{{ form_title }}</h1>
+
+    <form method="POST" class="card memory-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" maxlength="200" required
+               placeholder="e.g. Our anniversary" value="{{ form.title }}">
+
+        <label for="event_date">Date</label>
+        <input type="date" id="event_date" name="event_date" required value="{{ form.event_date }}">
+
+        <label for="category">Type</label>
+        <select id="category" name="category">
+            {% for value, label in categories %}
+            <option value="{{ value }}" {{ 'selected' if form.category == value }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="description">Note (optional)</label>
+        <textarea id="description" name="description" rows="4"
+                  placeholder="Anything you want to remember about this day">{{ form.description }}</textarea>
+
+        <label class="checkbox-row">
+            <input type="checkbox" name="repeats_yearly" {{ 'checked' if form.repeats_yearly }}>
+            Repeats every year
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ url_for('smart.special_dates') }}" class="cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

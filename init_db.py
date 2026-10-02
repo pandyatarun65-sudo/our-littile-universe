@@ -1,77 +1,35 @@
 """
-Run this once to create the database tables and fill them with:
-- your 2 user accounts (from .env)
-- a few sample memories, so the timeline isn't empty on first login.
-
-Usage:
-    python init_db.py
+Database initialization script for Our Little Universe.
+Creates tables and default users using display_name.
 """
-
-import os
-from datetime import date
-from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash
-
 from app import create_app, db
-from app.models import User, Memory
-
-load_dotenv()
+from app.models import User
+from werkzeug.security import generate_password_hash
 
 app = create_app()
 
 with app.app_context():
-    # Create all tables defined in app/models.py
+    print("[+] Creating all database tables...")
     db.create_all()
 
-    # Only seed if there are no users yet, so re-running this script
-    # doesn't create duplicates.
-    if User.query.count() == 0:
+    # Check if any user already exists
+    if not User.query.first():
+        print("[+] Creating default universe users...")
         user1 = User(
-            name=os.environ.get('USER1_NAME', 'Alex'),
-            email=os.environ.get('USER1_EMAIL', 'alex@example.com').lower(),
-            password_hash=generate_password_hash(
-                os.environ.get('USER1_PASSWORD', 'changeme123')
-            ),
+            username='user1',
+            display_name='Partner 1',
+            password_hash=generate_password_hash('password123')
         )
         user2 = User(
-            name=os.environ.get('USER2_NAME', 'Sam'),
-            email=os.environ.get('USER2_EMAIL', 'sam@example.com').lower(),
-            password_hash=generate_password_hash(
-                os.environ.get('USER2_PASSWORD', 'changeme456')
-            ),
+            username='user2',
+            display_name='Partner 2',
+            password_hash=generate_password_hash('password123')
         )
-
-        db.session.add_all([user1, user2])
+        db.session.add(user1)
+        db.session.add(user2)
         db.session.commit()
-
-        print(f"Created users: {user1.email} and {user2.email}")
-
-        sample_memories = [
-            Memory(
-                title="The day we met",
-                description="Coffee, nerves, and way too much laughing for a first hello.",
-                memory_date=date(2023, 4, 12),
-                created_by=user1.id,
-            ),
-            Memory(
-                title="First trip together",
-                description="Got lost twice, didn't care once.",
-                memory_date=date(2023, 8, 3),
-                created_by=user2.id,
-            ),
-            Memory(
-                title="A quiet Tuesday",
-                description="Nothing special happened, and it was perfect anyway.",
-                memory_date=date(2024, 2, 20),
-                created_by=user1.id,
-            ),
-        ]
-
-        db.session.add_all(sample_memories)
-        db.session.commit()
-
-        print(f"Added {len(sample_memories)} sample memories.")
+        print("[✓] Default users created: 'user1' and 'user2' (Password: password123)")
     else:
-        print("Users already exist — skipping seed data.")
+        print("[✓] Users already exist in database.")
 
-    print("Database ready.")
+    print("[✓] Database initialization complete!")

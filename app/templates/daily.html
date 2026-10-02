@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Question of the Day — Our Little Universe{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/phase5.css') }}">{% endblock %}
+
+{% block content %}
+<div class="container">
+    <p class="eyebrow">{{ today.strftime('%d %B %Y') }}</p>
+    <h1 class="page-title">Question of the Day</h1>
+
+    <div class="daily-card fade-in">
+        <p class="daily-question">{{ question }}</p>
+
+        <form method="POST" class="memory-form" style="padding:0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="answer">{{ 'Your answer (you can edit it today)' if my_answer else 'Your answer' }}</label>
+            <textarea id="answer" name="answer" rows="5" maxlength="2000" required
+                      placeholder="Write from the heart...">{{ my_answer.answer if my_answer else '' }}</textarea>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{ 'Update answer' if my_answer else 'Save answer' }}</button>
+            </div>
+        </form>
+    </div>
+
+    {% if partner %}
+    <div class="daily-card fade-in">
+        {% if my_answer and partner_answer %}
+            <span class="answer-owner">{{ partner.name }}'s answer</span>
+            <div class="answer-box">{{ partner_answer.answer|nl2br }}</div>
+        {% elif my_answer %}
+            <p class="dash-empty">{{ partner.name }} hasn't answered yet. Their answer will appear here ✧</p>
+        {% elif partner_answered %}
+            <p class="dash-empty">{{ partner.name }} has already answered. Write yours to see it ❤️</p>
+        {% else %}
+            <p class="dash-empty">{{ partner.name }} hasn't answered yet either.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if history %}
+    <h2 class="section-title">Earlier days</h2>
+    <div class="daily-card">
+        {% for h in history %}
+        <div class="daily-history-item">
+            <span class="memory-date">{{ h.answer_date.strftime('%d %B %Y') }}</span>
+            <p class="daily-history-q">{{ h.question_text }}</p>
+            <div class="answer-box">
+                <span class="answer-owner">You</span>
+                {{ h.answer|nl2br }}
+            </div>
+            {% set pa = partner_by_date.get(h.answer_date) %}
+            {% if pa and partner %}
+            <div class="answer-box">
+                <span class="answer-owner">{{ partner.name }}</span>
+                {{ pa.answer|nl2br }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

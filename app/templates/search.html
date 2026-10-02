@@ -1,18 +1,44 @@
 {% extends 'base.html' %}
 {% block title %}Search — Our Little Universe{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/phase5.css') }}">{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1 class="page-title">Search Memories</h1>
 
-    <form method="GET" action="{{ url_for('main.search') }}" class="search-form">
-        <input type="text" name="q" placeholder="Search by title or description..."
-               value="{{ query }}" autofocus>
-        <button type="submit" class="btn btn-primary">Search</button>
+    <form method="GET" action="{{ url_for('main.search') }}" class="search-filters">
+        <div class="search-form">
+            <input type="text" name="q" placeholder="Search by title or description..."
+                   value="{{ query }}" autofocus>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+
+        <div class="filter-row">
+            <input type="text" name="location" placeholder="Location" value="{{ location }}">
+
+            <select name="year" aria-label="Year">
+                <option value="">Any year</option>
+                {% for y in years %}
+                <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="author" aria-label="Added by">
+                <option value="">Anyone</option>
+                {% for u in users %}
+                <option value="{{ u.id }}" {{ 'selected' if author == u.id|string }}>{{ u.name }}</option>
+                {% endfor %}
+            </select>
+
+            {% if filters_used %}
+            <a href="{{ url_for('main.search') }}" class="cancel-link">Clear</a>
+            {% endif %}
+        </div>
     </form>
 
-    {% if query %}
+    {% if filters_used %}
         {% if results %}
+        <p class="results-count">{{ results|length }} memor{{ 'y' if results|length == 1 else 'ies' }} found</p>
         <div class="timeline">
             <div class="timeline-line" aria-hidden="true"></div>
             <div class="timeline-rows">
@@ -22,6 +48,7 @@
                     <div class="timeline-card">
                         <span class="memory-date">{{ memory.memory_date.strftime('%d %B %Y') }}</span>
                         <h3>{{ memory.title }}</h3>
+                        {% if memory.location %}<span class="memory-location">📍 {{ memory.location }}</span>{% endif %}
                         <p>{{ memory.description }}</p>
                         <span class="memory-author">— added by {{ memory.author.name }}</span>
                     </div>
@@ -33,7 +60,7 @@
         <div class="empty-state-card fade-in">
             <div class="empty-state-icon" aria-hidden="true"></div>
             <h2 class="empty-state-title">No matches</h2>
-            <p class="empty-state-text">Nothing matches "{{ query }}". Try a different word.</p>
+            <p class="empty-state-text">Nothing matches these filters. Try fewer or different words.</p>
         </div>
         {% endif %}
     {% endif %}

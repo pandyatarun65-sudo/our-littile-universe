@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard — Our Little Universe{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/phase5.css') }}">{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -8,6 +9,8 @@
         <h1 class="page-title">Welcome back to your universe.</h1>
         <p class="page-subtitle">Every memory here is a small piece of us.</p>
     </section>
+
+    <p class="dash-note fade-in">✧ {{ daily_note }}</p>
 
     <section class="stats-grid">
         <div class="stat-card fade-in">
@@ -29,8 +32,63 @@
 
         <div class="stat-card fade-in">
             <span class="stat-label">Upcoming</span>
-            <span class="stat-value stat-value-placeholder">—</span>
-            <span class="stat-hint">Special dates, coming soon</span>
+            {% if upcoming_dates %}
+                {% set next_sd = upcoming_dates[0] %}
+                {% set days_left = next_sd.days_until(today) %}
+                <span class="stat-value">
+                    {% if days_left == 0 %}Today{% elif days_left == 1 %}Tomorrow{% else %}{{ days_left }} days{% endif %}
+                </span>
+                <span class="stat-hint">{{ next_sd.title }} · {{ next_sd.next_occurrence(today).strftime('%d %b') }}</span>
+                <span class="stat-hint"><a href="{{ url_for('smart.special_dates') }}">All special dates &rarr;</a></span>
+            {% else %}
+                <span class="stat-value stat-value-placeholder">—</span>
+                <span class="stat-hint">No special dates yet · <a href="{{ url_for('smart.add_special_date') }}">add one</a></span>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if locked_count %}
+    <div class="dash-strip fade-in">
+        <span>✉ {{ locked_count }} sealed {{ 'surprise is' if locked_count == 1 else 'surprises are' }} waiting for you.</span>
+    </div>
+    {% endif %}
+
+    <section class="dash-duo">
+        <div class="dash-panel fade-in">
+            <h2 class="dash-panel-title">On This Day ❤️</h2>
+            <p class="dash-panel-sub">{{ today.strftime('%d %B') }}</p>
+            {% if on_this_day %}
+            <ul class="otd-list">
+                {% for m in on_this_day %}
+                {% set yrs = today.year - m.memory_date.year %}
+                <li>
+                    <span class="otd-years">{{ yrs }} year{{ '' if yrs == 1 else 's' }} ago</span>
+                    <a href="{{ url_for('main.timeline') }}">{{ m.title }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="dash-empty">Nothing from earlier years on this date yet. Today could become a memory for next year ✧</p>
+            <a href="{{ url_for('main.add_memory') }}" class="btn btn-ghost btn-sm">+ Add Memory</a>
+            {% endif %}
+        </div>
+
+        <div class="dash-panel fade-in">
+            <h2 class="dash-panel-title">Question of the Day</h2>
+            <p class="daily-question">{{ question }}</p>
+            {% if my_answer %}
+                <p class="dash-panel-sub">
+                    You've answered{% if partner_answered and partner %} · {{ partner.name }} has too ❤️{% endif %}
+                </p>
+                <a href="{{ url_for('smart.daily') }}" class="btn btn-ghost btn-sm">
+                    {% if partner_answered %}Read answers{% else %}Edit my answer{% endif %}
+                </a>
+            {% else %}
+                <p class="dash-panel-sub">
+                    {% if partner_answered and partner %}{{ partner.name }} has already answered.{% else %}Be the first to answer today.{% endif %}
+                </p>
+                <a href="{{ url_for('smart.daily') }}" class="btn btn-primary btn-sm">Answer</a>
+            {% endif %}
         </div>
     </section>
 
@@ -65,6 +123,7 @@
         <a href="{{ url_for('main.add_memory') }}" class="btn btn-primary">+ Add Memory</a>
         <a href="{{ url_for('main.gallery') }}" class="btn btn-ghost">View Gallery</a>
         <a href="{{ url_for('main.search') }}" class="btn btn-ghost">Search</a>
+        <a href="{{ url_for('smart.special_dates') }}" class="btn btn-ghost">Special Dates</a>
     </section>
 </div>
 {% endblock %}

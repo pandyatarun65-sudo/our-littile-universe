@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Open When... &middot; Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <div class="header-titles">
+            <span class="sub-greeting">Care Packages</span>
+            <h1 class="main-greeting">Open When...</h1>
+            <p class="header-quote">Special envelopes for your hard days, lonely nights, and quiet celebrations.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('surprises.open_when_create') }}" class="btn btn-primary">
+                <span>✉ Create "Open When" Envelope</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Received Envelopes -->
+    <section class="mb-5">
+        <h2 class="section-title">Envelopes for You</h2>
+        {% if received %}
+            <div class="memory-grid">
+                {% for item in received %}
+                <div class="glass-card envelope-box {% if not item.is_unlocked() %}card-locked{% endif %}">
+                    <div class="envelope-stamp">✉</div>
+                    <h3 class="letter-card-title">{{ item.title }}</h3>
+                    <p class="letter-hint-text">{{ item.cover_hint or 'Kept safe for the right moment.' }}</p>
+
+                    <div class="card-footer-flex">
+                        {% if item.is_unlocked() %}
+                            <a href="{{ url_for('surprises.letter_view', letter_id=item.id) }}" class="btn btn-sm btn-primary full-width">Open Envelope</a>
+                        {% else %}
+                            <span class="status-pill status-locked">🔒 Available on {{ item.unlock_date.strftime('%B %d, %Y') }}</span>
+                            <a href="{{ url_for('surprises.letter_view', letter_id=item.id) }}" class="btn btn-sm btn-secondary">Inspect Seal</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <span class="empty-icon">🕊</span>
+                <p>No "Open When" letters have been gifted to you yet.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Sent Envelopes -->
+    {% if sent %}
+    <section class="mt-5">
+        <h2 class="section-title">Envelopes You Prepared</h2>
+        <div class="memory-grid">
+            {% for item in sent %}
+            <div class="glass-card letter-card">
+                <h3 class="letter-card-title">{{ item.title }}</h3>
+                <p class="letter-hint-text">{{ item.cover_hint }}</p>
+                <div class="card-footer-flex">
+                    <a href="{{ url_for('surprises.letter_view', letter_id=item.id) }}" class="btn btn-sm btn-secondary">View</a>
+                    <div class="action-btn-group">
+                        <a href="{{ url_for('surprises.letter_edit', letter_id=item.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                        <form action="{{ url_for('surprises.letter_delete', letter_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this envelope?');" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

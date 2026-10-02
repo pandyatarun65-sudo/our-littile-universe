@@ -17,6 +17,11 @@
         <input type="date" id="memory_date" name="memory_date" required
                value="{{ memory.memory_date.isoformat() if memory else '' }}">
 
+        <label for="location">Location (optional)</label>
+<input type="text" id="location" name="location" maxlength="200"
+       placeholder="Where did this happen?"
+       value="{{ memory.location if memory and memory.location else '' }}">
+
         <label for="description">Description</label>
         <textarea id="description" name="description" rows="5"
                   placeholder="What made this moment special?">{{ memory.description if memory else '' }}</textarea>

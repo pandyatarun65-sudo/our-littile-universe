@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Special Dates — Our Little Universe{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/phase5.css') }}">{% endblock %}
+
+{% macro date_card(sd, show_countdown) %}
+<div class="special-card fade-in">
+    <span class="memory-date">{{ category_labels.get(sd.category, 'Other') }}</span>
+    <h3>{{ sd.title }}</h3>
+    <p class="special-when">
+        {% if show_countdown %}{{ sd.next_occurrence(today).strftime('%d %B %Y') }}{% else %}{{ sd.event_date.strftime('%d %B %Y') }}{% endif %}
+        {% if show_countdown and sd.years_count(today) > 0 %} · {{ sd.years_count(today) }} year{{ '' if sd.years_count(today) == 1 else 's' }}{% endif %}
+    </p>
+    {% if show_countdown %}
+        {% set d = sd.days_until(today) %}
+        <p class="special-countdown">{% if d == 0 %}Today ❤️{% elif d == 1 %}Tomorrow{% else %}in {{ d }} days{% endif %}</p>
+    {% endif %}
+    {% if sd.description %}<p class="special-desc">{{ sd.description }}</p>{% endif %}
+
+    {% if sd.created_by == current_user.id %}
+    <div class="special-actions">
+        <a href="{{ url_for('smart.edit_special_date', date_id=sd.id) }}">Edit</a>
+        <form method="POST" action="{{ url_for('smart.delete_special_date', date_id=sd.id) }}"
+              onsubmit="return confirm('Delete this special date?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="delete-link">Delete</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="container">
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">Remember always</p>
+            <h1 class="page-title">Special Dates</h1>
+        </div>
+        <a href="{{ url_for('smart.add_special_date') }}" class="btn btn-primary">+ Add Special Date</a>
+    </div>
+
+    {% if upcoming %}
+    <div class="special-grid">
+        {% for sd in upcoming %}{{ date_card(sd, True) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <h2 class="empty-state-title">No special dates yet</h2>
+        <p class="empty-state-text">Add a birthday, an anniversary, or the day you first met.</p>
+        <a href="{{ url_for('smart.add_special_date') }}" class="btn btn-primary">Add the first one</a>
+    </div>
+    {% endif %}
+
+    {% if past %}
+    <h2 class="section-title">Past one-time dates</h2>
+    <div class="special-grid">
+        {% for sd in past %}{{ date_card(sd, False) }}{% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

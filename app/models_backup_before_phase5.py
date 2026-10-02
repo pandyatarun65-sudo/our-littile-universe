@@ -1,5 +1,5 @@
+from datetime import datetime, timezone
 from datetime import datetime, timezone, date
-from flask import has_request_context
 from app import db
 from flask_login import UserMixin, current_user
 
@@ -13,10 +13,6 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Phase 6: presence. Updated by a small heartbeat ping from the chat page —
-    # no separate history table, just "when did we last hear from this browser".
-    last_seen = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     memories = db.relationship('Memory', backref='author', lazy=True, foreign_keys='Memory.created_by')
@@ -48,31 +44,6 @@ class User(UserMixin, db.Model):
     @display_name.setter
     def display_name(self, value):
         self.name = value
-
-    @property
-    def is_online(self):
-        """True if we heard from this user's browser in the last 60 seconds."""
-        if not self.last_seen:
-            return False
-        seen = self.last_seen if self.last_seen.tzinfo else self.last_seen.replace(tzinfo=timezone.utc)
-        return (datetime.now(timezone.utc) - seen).total_seconds() < 60
-
-    def last_seen_label(self):
-        """A friendly string for the UI: 'Online', 'Just now', '5 min ago', etc."""
-        if self.is_online:
-            return 'Online'
-        if not self.last_seen:
-            return 'Never active yet'
-        seen = self.last_seen if self.last_seen.tzinfo else self.last_seen.replace(tzinfo=timezone.utc)
-        seconds = (datetime.now(timezone.utc) - seen).total_seconds()
-        if seconds < 3600:
-            minutes = max(1, int(seconds // 60))
-            return f"Last seen {minutes} min ago"
-        if seconds < 86400:
-            hours = int(seconds // 3600)
-            return f"Last seen {hours}h ago"
-        days = int(seconds // 86400)
-        return f"Last seen {days}d ago"
 
     def __repr__(self):
         return f''
@@ -143,7 +114,7 @@ class Photo(db.Model):
             kwargs['uploaded_by'] = kwargs.pop('created_by')
 
         if 'uploaded_by' not in kwargs:
-            if has_request_context() and hasattr(current_user, 'id') and current_user.is_authenticated:
+            if hasattr(current_user, 'id') and current_user.is_authenticated:
                 kwargs['uploaded_by'] = current_user.id
 
         super().__init__(**kwargs)
@@ -206,8 +177,7 @@ class SecretLetter(db.Model):
     def __repr__(self):
         return f''
 
-
-class SpecialDate(db.Model):
+    class SpecialDate(db.Model):
     """Important dates: birthday, anniversary, first meeting, ..."""
     __tablename__ = 'special_dates'
 
@@ -272,102 +242,3 @@ class DailyAnswer(db.Model):
     )
 
     user = db.relationship('User', backref='daily_answers', foreign_keys=[user_id])
-
-
-# ==================================================================
-# PHASE 6 — Private Couple Communication
-# ==================================================================
-class ChatMessage(db.Model):
-    __tablename__ = 'chat_messages'
-
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
-    # 'text' | 'image' | 'voice'
-    message_type = db.Column(db.String(20), nullable=False, default='text')
-    body = db.Column(db.Text, nullable=True)  # empty for pure image/voice messages
-
-    # Relative path under a PRIVATE folder (NOT app/static/) — served only
-    # through the protected chat.media route, never a direct static URL.
-    media_path = db.Column(db.String(255), nullable=True)
-    media_duration = db.Column(db.Integer, nullable=True)  # seconds, voice only
-
-    reply_to_id = db.Column(db.Integer, db.ForeignKey('chat_messages.id'), nullable=True)
-
-    sent_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    delivered_at = db.Column(db.DateTime, nullable=True)
-    seen_at = db.Column(db.DateTime, nullable=True)
-
-    # Soft delete: keeps the row (so replies pointing at it don't break),
-    # just hides the real content once "deleted".
-    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
-
-    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
-    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='received_messages')
-    reply_to = db.relationship('ChatMessage', remote_side=[id], backref='replies')
-
-    @property
-    def status(self):
-        """Single label for the UI's tick marks: 'sent' | 'delivered' | 'seen'."""
-        if self.seen_at:
-            return 'seen'
-        if self.delivered_at:
-            return 'delivered'
-        return 'sent'
-
-    def mark_delivered(self):
-        if not self.delivered_at:
-            self.delivered_at = datetime.now(timezone.utc)
-
-    def mark_seen(self):
-        now = datetime.now(timezone.utc)
-        if not self.delivered_at:
-            self.delivered_at = now
-        if not self.seen_at:
-            self.seen_at = now
-
-    def __repr__(self):
-        return f''
-
-
-class Notification(db.Model):
-    __tablename__ = 'notifications'
-
-    id = db.Column(db.Integer, primary_key=True)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-
-    # 'chat_message' | 'letter' | 'open_when' | 'secret_box' | 'daily_question' | ...
-    category = db.Column(db.String(30), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    body = db.Column(db.String(300), nullable=True)
-
-    # Where clicking the notification should go, e.g. endpoint='chat.index',
-    # params='{"letter_id": 5}' (small JSON string, kept simple on purpose).
-    link_endpoint = db.Column(db.String(100), nullable=True)
-    link_params = db.Column(db.String(200), nullable=True)
-
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    is_read = db.Column(db.Boolean, nullable=False, default=False)
-    read_at = db.Column(db.DateTime, nullable=True)
-
-    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='notifications')
-    actor = db.relationship('User', foreign_keys=[actor_id])
-
-    def mark_read(self):
-        if not self.is_read:
-            self.is_read = True
-            self.read_at = datetime.now(timezone.utc)
-
-    def url(self):
-        """Builds the link this notification should open, or None if it's informational only."""
-        if not self.link_endpoint:
-            return None
-        import json
-        from flask import url_for
-        params = json.loads(self.link_params) if self.link_params else {}
-        return url_for(self.link_endpoint, **params)
-
-    def __repr__(self):
-        return f''
