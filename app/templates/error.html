@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="empty-state-card fade-in">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <p class="eyebrow">Error {{ code }}</p>
+        <h1 class="empty-state-title">{{ title }}</h1>
+        <p class="empty-state-text">{{ message }}</p>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Back to the dashboard</a>
+    </div>
+</div>
+{% endblock %}

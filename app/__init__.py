@@ -71,4 +71,7 @@ def create_app(config_class=None):
             return ''
         return Markup('<br>\n'.join(escape(s).split('\n')))
 
+    from app.hardening import init_security
+    init_security(app)
+
     return app

@@ -1,8 +1,32 @@
-venv/
-__pycache__/
-*.pyc
+# --- secrets ---
 .env
+.env.*
+!.env.example
+
+# --- private data (NEVER commit) ---
 instance/
-app/static/uploads/
-.DS_Store
+*.db
+*.sqlite
+*.sqlite3
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+backups/
+*.zip
+
+# --- python ---
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- editor / OS ---
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- temporary patch backups ---
+*_backup_before_phase*
