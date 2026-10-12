@@ -25,13 +25,16 @@
                     <p>{{ memory.description }}</p>
                     <div class="timeline-meta">
                         <span class="memory-author">— added by {{ memory.author.name }}</span>
+                        {% if memory.created_by == current_user.id %}
                         <div class="memory-actions">
                             <a href="{{ url_for('main.edit_memory', memory_id=memory.id) }}">Edit</a>
                             <form method="POST" action="{{ url_for('main.delete_memory', memory_id=memory.id) }}"
                                   onsubmit="return confirm('Delete this memory? This cannot be undone.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="delete-link">Delete</button>
                             </form>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -15,6 +15,7 @@
         </div>
 
         <form method="POST" class="auth-form memory-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="title" class="form-label">
                     {% if category == 'open_when' %}Envelope Trigger / Prompt{% else %}Title / Occasion{% endif %}

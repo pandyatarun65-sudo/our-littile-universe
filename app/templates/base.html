@@ -56,7 +56,7 @@
                         <span class="bell-badge" id="bellBadge" {% if not unread_notification_count %}hidden{% endif %}>{{ unread_notification_count or '' }}</span>
                     </a>
                     <span class="nav-user-greeting">{{ current_user.display_name }}</span>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-secondary">Exit</a>
+                    <form method="POST" action="{{ url_for('auth.logout') }}" class="nav-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-secondary">Exit</button></form>
                 </div>
             </nav>
             {% endif %}

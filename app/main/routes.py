@@ -1,8 +1,9 @@
 from datetime import datetime, date
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
 
 from app import db
+from app.security import check_csrf
 from app.models import Memory, Photo, User
 from app.utils import save_uploaded_photo, delete_photo_file
 from app.smart.helpers import (
@@ -13,6 +14,7 @@ from app.smart.helpers import (
     todays_note,
     daily_status,
 )
+from app.timeutil import app_today, app_now
 
 main_bp = Blueprint('main', __name__)
 
@@ -20,14 +22,14 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 @login_required
 def dashboard():
-    today = date.today()
+    today = app_today()
 
     # --- existing dashboard data (unchanged) ---
     memory_count = Memory.query.count()
     latest_memory = Memory.query.order_by(Memory.memory_date.desc()).first()
     latest_photo = Photo.query.order_by(Photo.uploaded_at.desc()).first()
 
-    hour = datetime.now().hour
+    hour = app_now().hour
     if hour < 12:
         greeting = 'Good morning'
     elif hour < 18:
@@ -71,6 +73,7 @@ def _parse_memory_date(date_string):
 @login_required
 def add_memory():
     if request.method == 'POST':
+        check_csrf()
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         memory_date_str = request.form.get('memory_date', '')
@@ -117,8 +120,11 @@ def add_memory():
 @login_required
 def edit_memory(memory_id):
     memory = Memory.query.get_or_404(memory_id)
+    if memory.created_by != current_user.id:      # Phase 7: only the creator may edit
+        abort(403)
 
     if request.method == 'POST':
+        check_csrf()
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         memory_date_str = request.form.get('memory_date', '')
@@ -162,7 +168,10 @@ def edit_memory(memory_id):
 @main_bp.route('/memories/<int:memory_id>/delete', methods=['POST'])
 @login_required
 def delete_memory(memory_id):
+    check_csrf()
     memory = Memory.query.get_or_404(memory_id)
+    if memory.created_by != current_user.id:      # Phase 7: only the creator may delete
+        abort(403)
 
     for photo in memory.photos:
         delete_photo_file(photo.file_path)

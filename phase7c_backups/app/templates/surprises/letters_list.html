@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Letters &middot; Our Little Universe{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <div class="header-titles">
+            <span class="sub-greeting">Private Correspondence</span>
+            <h1 class="main-greeting">Letters of Our Heart</h1>
+            <p class="header-quote">Quiet thoughts sealed until their appointed hour.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('surprises.letter_create') }}" class="btn btn-primary">
+                <span>✍ Write a Letter</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Letters Received Section -->
+    <section class="mb-5">
+        <h2 class="section-title">Letters for You</h2>
+        {% if received %}
+            <div class="memory-grid">
+                {% for letter in received %}
+                <div class="glass-card letter-card {% if not letter.is_unlocked() %}card-locked{% endif %}">
+                    <div class="card-status-bar">
+                        {% if letter.is_unlocked() %}
+                            <span class="status-pill status-unlocked">💌 Ready to Read</span>
+                        {% else %}
+                            <span class="status-pill status-locked">🔒 Sealed until {{ letter.unlock_date.strftime('%B %d, %Y') }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="letter-card-title">{{ letter.title }}</h3>
+
+                    {% if letter.cover_hint %}
+                        <p class="letter-hint-text">"{{ letter.cover_hint }}"</p>
+                    {% endif %}
+
+                    <div class="card-footer-flex">
+                        <span class="text-muted-sm">From {{ letter.sender.display_name }}</span>
+                        <a href="{{ url_for('surprises.letter_view', letter_id=letter.id) }}" class="btn btn-sm btn-primary">
+                            {% if letter.is_unlocked() %}Open Letter{% else %}View Seal{% endif %}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <span class="empty-icon">✉</span>
+                <p>No letters are waiting for you right now.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Letters Sent Section -->
+    <section class="mt-5">
+        <h2 class="section-title">Letters Written by You</h2>
+        {% if sent %}
+            <div class="memory-grid">
+                {% for letter in sent %}
+                <div class="glass-card letter-card">
+                    <div class="card-status-bar">
+                        {% if letter.is_unlocked() %}
+                            <span class="status-pill status-neutral">Unlocked for {{ letter.recipient.display_name }}</span>
+                        {% else %}
+                            <span class="status-pill status-locked">Locks until {{ letter.unlock_date.strftime('%B %d, %Y') }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="letter-card-title">{{ letter.title }}</h3>
+                    <p class="text-muted-sm">Penned on {{ letter.created_at.strftime('%B %d, %Y') }}</p>
+
+                    <div class="card-footer-flex">
+                        <a href="{{ url_for('surprises.letter_view', letter_id=letter.id) }}" class="btn btn-sm btn-secondary">Read</a>
+                        <div class="action-btn-group">
+                            <a href="{{ url_for('surprises.letter_edit', letter_id=letter.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            <form action="{{ url_for('surprises.letter_delete', letter_id=letter.id) }}" method="POST" onsubmit="return confirm('Permanently delete this letter?');" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <p>You haven't written any letters yet.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

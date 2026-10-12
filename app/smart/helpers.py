@@ -7,6 +7,7 @@ from datetime import date, datetime, timezone
 
 from app import db
 from app.models import Memory, SpecialDate, SecretLetter, User, DailyAnswer
+from app.timeutil import app_today
 
 
 # ------------------------------------------------------------------
@@ -60,12 +61,12 @@ DAILY_NOTES = [
 
 
 def todays_question(today=None):
-    today = today or date.today()
+    today = today or app_today()
     return DAILY_QUESTIONS[today.toordinal() % len(DAILY_QUESTIONS)]
 
 
 def todays_note(today=None):
-    today = today or date.today()
+    today = today or app_today()
     return DAILY_NOTES[today.toordinal() % len(DAILY_NOTES)]
 
 
@@ -74,7 +75,7 @@ def memories_on_this_day(today=None):
     Memories from the same day + month in PREVIOUS years.
     Nothing is copied or saved — we just filter the memories table.
     """
-    today = today or date.today()
+    today = today or app_today()
     month_days = [today.strftime('%m-%d')]
     # A memory from 29 Feb should still show up on 28 Feb in non-leap years.
     if month_days[0] == '02-28' and not calendar.isleap(today.year):
@@ -93,7 +94,7 @@ def memories_on_this_day(today=None):
 
 def upcoming_special_dates(limit=3, today=None):
     """Next special dates, soonest first. (Few rows, so sorting in Python is fine.)"""
-    today = today or date.today()
+    today = today or app_today()
     coming = [sd for sd in SpecialDate.query.all() if sd.next_occurrence(today) is not None]
     coming.sort(key=lambda sd: sd.next_occurrence(today))
     return coming[:limit]
@@ -105,13 +106,13 @@ def locked_surprise_count(user_id):
     Only a NUMBER is returned — no titles, hints or bodies.
     Uses the same UTC date as SecretLetter.is_unlocked() so both always agree.
     """
-    today_utc = datetime.now(timezone.utc).date()
+    today_local = app_today()
     return (
         SecretLetter.query
         .filter(
             SecretLetter.recipient_id == user_id,
             SecretLetter.unlock_date.isnot(None),
-            SecretLetter.unlock_date > today_utc,
+            SecretLetter.unlock_date > today_local,
         )
         .count()
     )
@@ -122,7 +123,7 @@ def daily_status(user_id, today=None):
     Returns (my_answer, partner, partner_answer) for today.
     NOTE: partner_answer's TEXT must only be shown if my_answer exists.
     """
-    today = today or date.today()
+    today = today or app_today()
     my_answer = DailyAnswer.query.filter_by(user_id=user_id, answer_date=today).first()
     partner = User.query.filter(User.id != user_id).first()
     partner_answer = None

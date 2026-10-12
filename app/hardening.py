@@ -1,21 +1,27 @@
 """
 Phase 7 security hardening. One place, called once from create_app():  init_security(app)
 
-What it does (all server-side, no template changes needed):
-  1. Private memory photos (/static/uploads/...) can only be opened when logged in.
-  2. Same-origin check on every state-changing request (POST/PUT/PATCH/DELETE):
-     protects the OLD forms (memories, letters) that have no csrf_token field.
+  1. Private memory photos: served by a login-protected route from UPLOAD_DIR
+     (and, for old photos, from app/static/uploads). The URL stays /static/uploads/<name>,
+     so no template needed to change.
+  2. CSRF: every POST/PUT/PATCH/DELETE must carry the session's csrf token
+     (form field `csrf_token` or header `X-CSRF-Token`), plus a same-origin check.
   3. Security headers on every response.
   4. Friendly error pages (JSON for chat/notification calls) - no stack traces to the user.
-  5. SQLite: foreign keys ON + busy timeout (fewer "database is locked" errors).
+  5. SQLite: foreign keys ON + busy timeout.
+  6. /healthz for the hosting platform's health check (no data, no login).
 """
+import logging
 import os
 import sqlite3
 from urllib.parse import urlparse
 
-from flask import abort, jsonify, render_template, request, session
+from flask import abort, jsonify, render_template, request, send_from_directory, session
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
+from werkzeug.utils import safe_join
+
+from app.security import check_csrf
 
 SAFE_METHODS = {'GET', 'HEAD', 'OPTIONS'}
 PRIVATE_PREFIX = '/static/uploads/'
@@ -45,41 +51,64 @@ def _error(code, title, message):
 
 
 def init_security(app):
-    os.makedirs(app.config.get('DATA_DIR', app.instance_path), exist_ok=True)
+    data_dir = app.config.get('DATA_DIR') or app.instance_path
+    upload_dir = app.config.get('UPLOAD_DIR') or os.path.join(data_dir, 'uploads')
+    app.config.setdefault('UPLOAD_DIR', upload_dir)
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(upload_dir, exist_ok=True)
 
     if app.config.get('IS_PRODUCTION'):
-        # Render (and most hosts) sit behind a proxy: trust its forwarded host/scheme headers.
+        # Render sits behind a proxy: trust its forwarded host/scheme/ip headers (real client IP for rate limiting).
         from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+        app.logger.setLevel(logging.INFO)
 
     @app.before_request
     def _protect_requests():
-        # 1) private photos: login required (the session cookie is signed, so this check is cheap and safe)
+        # 1) private photos: login required (the session cookie is signed, so this is cheap and safe)
         if request.path.startswith(PRIVATE_PREFIX) and not session.get('_user_id'):
             abort(401)
 
-        # 2) same-origin check for anything that changes data
         if request.method not in SAFE_METHODS:
+            # 2a) same-origin check
             source = request.headers.get('Origin') or request.headers.get('Referer')
             if source and urlparse(source).netloc != request.host:
                 abort(403)
+            # 2b) CSRF token for EVERY state-changing request (forms and fetch calls)
+            check_csrf()
+
+    # ---- private photo route: more specific than Flask's built-in /static/<path>, so it wins
+    @app.route(PRIVATE_PREFIX + '<path:filename>')
+    def private_upload(filename):
+        if not session.get('_user_id'):
+            abort(401)
+        legacy_dir = os.path.join(app.static_folder, 'uploads')
+        for folder in (app.config['UPLOAD_DIR'], legacy_dir):
+            full = safe_join(folder, filename)          # None if the name tries to escape the folder
+            if full and os.path.isfile(full):
+                return send_from_directory(folder, filename, conditional=True)
+        abort(404)
+
+    @app.route('/healthz')
+    def healthz():
+        return 'ok', 200, {'Content-Type': 'text/plain', 'Cache-Control': 'no-store'}
 
     @app.after_request
     def _security_headers(response):
         response.headers.setdefault('X-Content-Type-Options', 'nosniff')
         response.headers.setdefault('X-Frame-Options', 'DENY')
         response.headers.setdefault('Referrer-Policy', 'same-origin')
-        # microphone is needed by our own chat page only; camera/location are never needed
         response.headers.setdefault('Permissions-Policy', 'microphone=(self), camera=(), geolocation=()')
         if request.path.startswith(PRIVATE_PREFIX):
             response.headers['Cache-Control'] = 'private, max-age=3600'
         elif request.method == 'GET' and response.mimetype == 'text/html':
-            response.headers.setdefault('Cache-Control', 'no-store')   # private pages must not sit in shared caches
+            response.headers.setdefault('Cache-Control', 'no-store')
         return response
 
     @app.errorhandler(400)
     def _bad_request(_e):
-        return _error(400, 'Something went wrong', 'That request could not be understood. Please go back and try again.')
+        return _error(400, 'Something went wrong', 'That request could not be verified. Please go back, refresh the page and try again.')
 
     @app.errorhandler(401)
     def _unauthorized(_e):
@@ -92,6 +121,10 @@ def init_security(app):
     @app.errorhandler(404)
     def _not_found(_e):
         return _error(404, 'Lost in space', 'We could not find what you were looking for.')
+
+    @app.errorhandler(405)
+    def _method_not_allowed(_e):
+        return _error(405, 'Not allowed', 'That action is not available this way.')
 
     @app.errorhandler(413)
     def _too_large(_e):

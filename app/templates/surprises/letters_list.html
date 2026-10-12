@@ -78,6 +78,7 @@
                         <div class="action-btn-group">
                             <a href="{{ url_for('surprises.letter_edit', letter_id=letter.id) }}" class="btn btn-sm btn-secondary">Edit</a>
                             <form action="{{ url_for('surprises.letter_delete', letter_id=letter.id) }}" method="POST" onsubmit="return confirm('Permanently delete this letter?');" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </div>

@@ -25,10 +25,13 @@ def _load_secret_key():
 class Config:
     SECRET_KEY = _load_secret_key()
 
-    # DATA_DIR: where the database and private chat media live (default: the "instance" folder).
+    # DATA_DIR = ONE folder that holds everything private and must survive restarts:
+    # the database, memory photos (uploads/) and chat media (chat_media/).
+    # Laptop: defaults to the "instance" folder.  Render: set DATA_DIR=/var/data (the persistent disk).
     DATA_DIR = os.path.abspath(os.environ.get('DATA_DIR') or os.path.join(basedir, 'instance'))
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'database.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_DIR = os.path.abspath(os.environ.get('UPLOAD_DIR') or os.path.join(DATA_DIR, 'uploads'))
 
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 

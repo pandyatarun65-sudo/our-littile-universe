@@ -9,6 +9,8 @@
     </p>
 
     <form method="POST" enctype="multipart/form-data" class="memory-form card">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- created_by == current_user.id is enforced on the server -->
         <label for="title">Title</label>
         <input type="text" id="title" name="title" required
                value="{{ memory.title if memory else '' }}" placeholder="A name for this memory">

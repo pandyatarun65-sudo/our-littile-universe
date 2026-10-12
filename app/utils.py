@@ -23,6 +23,12 @@ def detect_image_type(head):
 
 
 def _upload_dir():
+    """New photos go to UPLOAD_DIR (DATA_DIR/uploads) - outside app/static, on the persistent disk."""
+    return current_app.config.get('UPLOAD_DIR') or os.path.join(current_app.instance_path, 'uploads')
+
+
+def _legacy_upload_dir():
+    """Photos uploaded before Phase 7 still live here; they keep working."""
     return os.path.join(current_app.static_folder, 'uploads')
 
 
@@ -33,7 +39,6 @@ def save_uploaded_photo(file_storage):
     if not allowed_file(file_storage.filename):
         return None
 
-    # Phase 7: check the real content too, not only the extension.
     head = file_storage.stream.read(16)
     file_storage.stream.seek(0)
     ext = detect_image_type(head)
@@ -46,19 +51,19 @@ def save_uploaded_photo(file_storage):
     os.makedirs(upload_dir, exist_ok=True)
     file_storage.save(os.path.join(upload_dir, safe_name))
 
-    return f"uploads/{safe_name}"
+    return f"uploads/{safe_name}"                # the web URL stays /static/uploads/<name>
 
 
 def delete_photo_file(relative_path):
     if not relative_path:
         return
-    # Phase 7: only ever delete files that are really inside the uploads folder.
-    upload_dir = os.path.realpath(_upload_dir())
-    full_path = os.path.realpath(os.path.join(current_app.static_folder, relative_path))
-    if os.path.commonpath([upload_dir, full_path]) != upload_dir:
-        return
-    if os.path.isfile(full_path):
-        try:
-            os.remove(full_path)
-        except OSError:
-            pass
+    name = os.path.basename(relative_path)       # only the file name; never a path from the database
+    for folder in (_upload_dir(), _legacy_upload_dir()):
+        folder_real = os.path.realpath(folder)
+        full_path = os.path.realpath(os.path.join(folder, name))
+        if os.path.commonpath([folder_real, full_path]) == folder_real and os.path.isfile(full_path):
+            try:
+                os.remove(full_path)
+            except OSError:
+                pass
+            return

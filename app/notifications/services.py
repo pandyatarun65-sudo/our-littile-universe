@@ -10,6 +10,7 @@ from flask import url_for
 
 from app import db
 from app.models import Notification, SecretLetter, SpecialDate, User
+from app.timeutil import app_today, to_app_date
 
 # Only these pages can be opened from a notification (the link is built on the server).
 ALLOWED_LINKS = {
@@ -99,7 +100,7 @@ def ensure_generated_notifications(user_id):
     Runs lazily whenever the bell refreshes, so no background scheduler is needed.
     """
     created = False
-    today_utc = _now().date()
+    today_local = app_today()
 
     # --- unlocked surprises (once per letter) ---
     already = set()
@@ -112,12 +113,12 @@ def ensure_generated_notifications(user_id):
     letters = SecretLetter.query.filter(
         SecretLetter.recipient_id == user_id,
         SecretLetter.unlock_date.isnot(None),
-        SecretLetter.unlock_date <= today_utc,
+        SecretLetter.unlock_date <= today_local,
     ).all()
     for letter in letters:
         if letter.id in already:
             continue
-        if letter.created_at and letter.unlock_date <= letter.created_at.date():
+        if letter.created_at and letter.unlock_date <= to_app_date(letter.created_at):
             continue  # it was never locked, nothing "unlocked"
         db.session.add(Notification(
             recipient_id=user_id, actor_id=letter.user_id, category='unlock',
@@ -130,7 +131,7 @@ def ensure_generated_notifications(user_id):
     recent_titles = {n.title for n in Notification.query.filter(
         Notification.recipient_id == user_id, Notification.category == 'special_date',
         Notification.created_at >= _now() - timedelta(hours=20)).all()}
-    local_today = date.today()
+    local_today = app_today()
     for sd in SpecialDate.query.all():
         days = sd.days_until(local_today)
         if days not in (0, 1):

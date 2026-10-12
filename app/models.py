@@ -2,6 +2,7 @@ from datetime import datetime, timezone, date
 from flask import has_request_context
 from app import db
 from flask_login import UserMixin, current_user
+from app.timeutil import app_today
 
 
 class User(UserMixin, db.Model):
@@ -193,13 +194,13 @@ class SecretLetter(db.Model):
     def is_unlocked(self):
         if not self.unlock_date:
             return True
-        today = datetime.now(timezone.utc).date()
+        today = app_today()
         return today >= self.unlock_date
 
     def days_remaining(self):
         if not self.unlock_date:
             return 0
-        today = datetime.now(timezone.utc).date()
+        today = app_today()
         delta = (self.unlock_date - today).days
         return max(0, delta)
 
@@ -231,7 +232,7 @@ class SpecialDate(db.Model):
 
     def next_occurrence(self, today=None):
         """Next date this event happens (today counts). None if a one-time date is already past."""
-        today = today or date.today()
+        today = today or app_today()
         if not self.repeats_yearly:
             return self.event_date if self.event_date >= today else None
         candidate = self._in_year(today.year)
@@ -240,7 +241,7 @@ class SpecialDate(db.Model):
         return candidate
 
     def days_until(self, today=None):
-        today = today or date.today()
+        today = today or app_today()
         nxt = self.next_occurrence(today)
         return None if nxt is None else (nxt - today).days
 

@@ -18,6 +18,7 @@ from app.models import SpecialDate, DailyAnswer
 from app.security import check_csrf, get_csrf_token
 from app.smart.helpers import todays_question, daily_status
 from app.notifications.services import notify
+from app.timeutil import app_today
 
 smart_bp = Blueprint('smart', __name__)
 
@@ -72,7 +73,7 @@ def _read_special_date_form():
 @smart_bp.route('/special-dates')
 @login_required
 def special_dates():
-    today = date.today()
+    today = app_today()
     everything = SpecialDate.query.all()
     upcoming = sorted(
         [sd for sd in everything if sd.next_occurrence(today) is not None],
@@ -172,7 +173,7 @@ def delete_special_date(date_id):
 @smart_bp.route('/daily', methods=['GET', 'POST'])
 @login_required
 def daily():
-    today = date.today()
+    today = app_today()
     question = todays_question(today)
     my_answer, partner, partner_answer = daily_status(current_user.id, today)
 

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if letter %}Edit{% else %}Create{% endif %} Special Delivery &middot; Our Little Universe
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="glass-card form-card">
+        <div class="form-header">
+            <span class="sub-greeting">
+                {% if category == 'letter' %}Private Letter{% elif category == 'open_when' %}Open When Envelope{% else %}Secret Surprise{% endif %}
+            </span>
+            <h1 class="main-greeting">{% if letter %}Edit{% else %}Write{% endif %} for {{ partner.display_name if partner else 'Your Partner' }}</h1>
+        </div>
+
+        <form method="POST" class="auth-form memory-form">
+            <div class="form-group">
+                <label for="title" class="form-label">
+                    {% if category == 'open_when' %}Envelope Trigger / Prompt{% else %}Title / Occasion{% endif %}
+                </label>
+                <input type="text" id="title" name="title" class="form-control"
+                       placeholder="{% if category == 'open_when' %}Open when you're sad{% else %}A quiet note for you{% endif %}"
+                       value="{{ letter.title if letter else '' }}" required>
+            </div>
+
+            {% if category == 'open_when' %}
+            <div class="form-group">
+                <label for="mood_tag" class="form-label">Category Tone</label>
+                <select id="mood_tag" name="mood_tag" class="form-control">
+                    <option value="comfort" {% if letter and letter.mood_tag == 'comfort' %}selected{% endif %}>Comfort & Tender Care</option>
+                    <option value="love" {% if letter and letter.mood_tag == 'love' %}selected{% endif %}>Deep Affection & Longing</option>
+                    <option value="motivation" {% if letter and letter.mood_tag == 'motivation' %}selected{% endif %}>Strength & Encouragement</option>
+                    <option value="smile" {% if letter and letter.mood_tag == 'smile' %}selected{% endif %}>Joy & Smiles</option>
+                    <option value="sleep" {% if letter and letter.mood_tag == 'sleep' %}selected{% endif %}>Quiet Late Nights</option>
+                </select>
+            </div>
+            {% endif %}
+
+            {% if category == 'secret_box' %}
+            <div class="form-group">
+                <label for="box_type" class="form-label">Surprise Category</label>
+                <select id="box_type" name="box_type" class="form-control">
+                    <option value="gift" {% if letter and letter.box_type == 'gift' %}selected{% endif %}>🎁 Gift & Future Surprise</option>
+                    <option value="secret" {% if letter and letter.box_type == 'secret' %}selected{% endif %}>🗝 Secret Revelation</option>
+                    <option value="memory" {% if letter and letter.box_type == 'memory' %}selected{% endif %}>✨ Cherished Secret Memory</option>
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="cover_hint" class="form-label">Cover Teaser / Hint (Optional)</label>
+                <input type="text" id="cover_hint" name="cover_hint" class="form-control"
+                       placeholder="What they see on the outside seal before opening..."
+                       value="{{ letter.cover_hint if letter and letter.cover_hint else '' }}">
+                <small class="form-help-text">Visible to your partner on the envelope/box before unlock.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="unlock_date" class="form-label">Unlock Date (Optional)</label>
+                <input type="date" id="unlock_date" name="unlock_date" class="form-control"
+                       value="{{ letter.unlock_date.strftime('%Y-%m-%d') if letter and letter.unlock_date else '' }}">
+                <small class="form-help-text">Leave empty to allow opening immediately, or pick a future date.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="body" class="form-label">Secret Content / Body</label>
+                <textarea id="body" name="body" class="form-control" rows="8"
+                          placeholder="Write your words here..." required>{{ letter.body if letter else '' }}</textarea>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-primary">
+                    {% if letter %}Save Changes{% else %}Seal Delivery{% endif %}
+                </button>
+                <a href="javascript:history.back();" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
