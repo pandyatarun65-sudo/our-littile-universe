@@ -21,15 +21,15 @@ def _load_secret_key():
             '(python -c "import secrets; print(secrets.token_hex(32))").')
     return key or 'dev-key-change-me'      # sirf local development ke liye
 
-
 def _database_uri(data_dir):
     url = os.environ.get('DATABASE_URL', '').strip()
     if url:
-        if url.startswith('postgres://'):            # purana scheme; SQLAlchemy ko postgresql:// chahiye
+        if url.startswith('postgres://'):            # purana scheme
             url = 'postgresql://' + url[len('postgres://'):]
+        if url.startswith('postgresql://'):          # driver explicitly batao: psycopg v3
+            url = 'postgresql+psycopg://' + url[len('postgresql://'):]
         return url
     if IS_PRODUCTION or ON_RENDER:
-        # Server par SQLite par kabhi fallback nahi: wo file restart par mit jaati hai.
         raise RuntimeError('DATABASE_URL is not set. Add your Neon connection string in Render > Environment.')
     return 'sqlite:///' + os.path.join(data_dir, 'database.db')
 
