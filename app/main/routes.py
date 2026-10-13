@@ -201,9 +201,8 @@ def search():
 
     # --- data for the dropdowns ---
     users = User.query.order_by(User.name).all()
-    year_rows = db.session.query(db.func.strftime('%Y', Memory.memory_date)).distinct().all()
-    years = sorted({row[0] for row in year_rows if row[0]}, reverse=True)
-
+    year_rows = db.session.query(db.extract('year', Memory.memory_date)).distinct().all()
+    years = sorted({str(int(row[0])) for row in year_rows if row[0] is not None}, reverse=True)
     filters_used = any([query, location, year, author])
     results = []
 
@@ -217,8 +216,9 @@ def search():
             )
         if location:
             memories = memories.filter(Memory.location.ilike(f'%{location}%'))
-        if year.isdigit() and len(year) == 4:
-            memories = memories.filter(db.func.strftime('%Y', Memory.memory_date) == year)
+        if year.isdigit() and len(year) == 4:           
+            memories = memories.filter(db.extract('year', Memory.memory_date) == int(year))
+
         if author.isdigit():                        # memories are shared, so filtering by person is safe
             memories = memories.filter(Memory.created_by == int(author))
 

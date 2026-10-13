@@ -1,8 +1,12 @@
 import os
+import re
 import uuid
-from flask import current_app
+
+from app import storage
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+PHOTO_NAME_RE = re.compile(r'^[0-9a-f]{32}\.(jpg|png|gif|webp)$')
+PHOTO_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif', 'webp': 'image/webp'}
 
 
 def allowed_file(filename):
@@ -22,16 +26,6 @@ def detect_image_type(head):
     return None
 
 
-def _upload_dir():
-    """New photos go to UPLOAD_DIR (DATA_DIR/uploads) - outside app/static, on the persistent disk."""
-    return current_app.config.get('UPLOAD_DIR') or os.path.join(current_app.instance_path, 'uploads')
-
-
-def _legacy_upload_dir():
-    """Photos uploaded before Phase 7 still live here; they keep working."""
-    return os.path.join(current_app.static_folder, 'uploads')
-
-
 def save_uploaded_photo(file_storage):
     if not file_storage or not file_storage.filename:
         return None
@@ -46,24 +40,14 @@ def save_uploaded_photo(file_storage):
         return None
 
     safe_name = f"{uuid.uuid4().hex}.{ext}"      # our own name, our own (verified) extension
+    storage.put(f"uploads/{safe_name}", file_storage.stream.read(), PHOTO_MIME[ext])
 
-    upload_dir = _upload_dir()
-    os.makedirs(upload_dir, exist_ok=True)
-    file_storage.save(os.path.join(upload_dir, safe_name))
-
-    return f"uploads/{safe_name}"                # the web URL stays /static/uploads/<name>
+    return f"uploads/{safe_name}"                # web URL abhi bhi /static/uploads/<name> rehta hai
 
 
 def delete_photo_file(relative_path):
     if not relative_path:
         return
-    name = os.path.basename(relative_path)       # only the file name; never a path from the database
-    for folder in (_upload_dir(), _legacy_upload_dir()):
-        folder_real = os.path.realpath(folder)
-        full_path = os.path.realpath(os.path.join(folder, name))
-        if os.path.commonpath([folder_real, full_path]) == folder_real and os.path.isfile(full_path):
-            try:
-                os.remove(full_path)
-            except OSError:
-                pass
-            return
+    name = os.path.basename(relative_path)       # sirf file ka naam, database se path kabhi nahi
+    if PHOTO_NAME_RE.match(name):
+        storage.delete(f"uploads/{name}")

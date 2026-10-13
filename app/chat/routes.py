@@ -8,11 +8,11 @@ SECURITY RULES used in every route below:
   4. only the sender may delete a message
   5. every POST checks the CSRF token (X-CSRF-Token header)
 """
-from flask import Blueprint, abort, jsonify, render_template, request, send_from_directory
+from flask import Blueprint, abort, jsonify, render_template, request 
 from flask_login import current_user, login_required
 from sqlalchemy.orm import selectinload
 
-from app import db
+from app import db, storage
 from app.models import ChatMessage
 from app.security import check_csrf
 from app.notifications.services import notify_chat_message
@@ -222,12 +222,10 @@ def media(message_id):
         abort(404)
     if message.is_deleted or not message.media_path or not MEDIA_NAME_RE.match(message.media_path):
         abort(404)
-    response = send_from_directory(
-        chat_media_dir(), message.media_path,
-        mimetype=MIME_BY_EXT.get(media_ext(message.media_path)),
-        conditional=True)                # conditional = supports audio seeking
-    response.headers['Cache-Control'] = 'private, max-age=3600'
-    response.headers['X-Content-Type-Options'] = 'nosniff'
+        response = storage.send(f'chat/{message.media_path}',
+                            MIME_BY_EXT.get(media_ext(message.media_path)))
+    if response is None:
+        abort(404)
     return response
 
 

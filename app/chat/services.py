@@ -2,6 +2,7 @@
 Chat helpers: media validation/storage, presence, typing, message status, JSON shape.
 Works with the models in app/models.py (ChatMessage, User.last_seen).
 """
+from fileinput import filename
 import os
 import re
 import time
@@ -10,7 +11,7 @@ from datetime import datetime, timezone
 
 from flask import current_app, url_for
 
-from app import db
+from app import db, storage
 from app.models import ChatMessage, User
 from app.notifications.services import mark_chat_notifications_read
 
@@ -101,21 +102,14 @@ def save_media(file_storage, kind):
     limit = MAX_IMAGE_BYTES if kind == 'image' else MAX_VOICE_BYTES
     if size == 0 or size > limit:
         return None, 'That file is empty or too large.'
-    folder = chat_media_dir()
-    os.makedirs(folder, exist_ok=True)
-    filename = f'{uuid.uuid4().hex}.{ext}'          # our own name: the uploaded file name is ignored
-    file_storage.save(os.path.join(folder, filename))
+        filename = f'{uuid.uuid4().hex}.{ext}'          # our own name: the uploaded file name is ignored
+    storage.put(f'chat/{filename}', stream.read(), MIME_BY_EXT.get(ext))
     return filename, None
 
 
 def delete_media_file(media_path):
     if media_path and MEDIA_NAME_RE.match(media_path):
-        path = os.path.join(chat_media_dir(), media_path)
-        if os.path.isfile(path):
-            try:
-                os.remove(path)
-            except OSError:
-                pass
+        storage.delete(f'chat/{media_path}')
 
 
 def escape_like(text):

@@ -16,12 +16,14 @@ import os
 import sqlite3
 from urllib.parse import urlparse
 
-from flask import abort, jsonify, render_template, request, send_from_directory, session
+from flask import abort, jsonify, render_template, request, session
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from werkzeug.utils import safe_join
 
+from app import storage
 from app.security import check_csrf
+from app.utils import PHOTO_MIME, PHOTO_NAME_RE
+
 
 SAFE_METHODS = {'GET', 'HEAD', 'OPTIONS'}
 PRIVATE_PREFIX = '/static/uploads/'
@@ -83,12 +85,13 @@ def init_security(app):
     def private_upload(filename):
         if not session.get('_user_id'):
             abort(401)
-        legacy_dir = os.path.join(app.static_folder, 'uploads')
-        for folder in (app.config['UPLOAD_DIR'], legacy_dir):
-            full = safe_join(folder, filename)          # None if the name tries to escape the folder
-            if full and os.path.isfile(full):
-                return send_from_directory(folder, filename, conditional=True)
-        abort(404)
+        name = os.path.basename(filename)
+        if not PHOTO_NAME_RE.match(name):
+            abort(404)
+        response = storage.send(f'uploads/{name}', PHOTO_MIME.get(name.rsplit('.', 1)[1]))
+        if response is None:
+            abort(404)
+        return response
 
     @app.route('/healthz')
     def healthz():
