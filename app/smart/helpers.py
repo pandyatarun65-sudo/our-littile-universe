@@ -69,24 +69,28 @@ def todays_note(today=None):
     today = today or app_today()
     return DAILY_NOTES[today.toordinal() % len(DAILY_NOTES)]
 
-
 def memories_on_this_day(today=None):
     """
     Memories from the same day + month in PREVIOUS years.
     Nothing is copied or saved — we just filter the memories table.
     """
     today = today or app_today()
-    month_days = [today.strftime('%m-%d')]
+    month_days = [(today.month, today.day)]
     # A memory from 29 Feb should still show up on 28 Feb in non-leap years.
-    if month_days[0] == '02-28' and not calendar.isleap(today.year):
-        month_days.append('02-29')
+    if (today.month, today.day) == (2, 28) and not calendar.isleap(today.year):
+        month_days.append((2, 29))
+
+    same_day = db.or_(*[
+        db.and_(
+            db.extract('month', Memory.memory_date) == month,
+            db.extract('day', Memory.memory_date) == day,
+        )
+        for month, day in month_days
+    ])
 
     return (
         Memory.query
-        .filter(
-            db.func.strftime('%m-%d', Memory.memory_date).in_(month_days),
-            Memory.memory_date < date(today.year, 1, 1),
-        )
+        .filter(same_day, Memory.memory_date < date(today.year, 1, 1))
         .order_by(Memory.memory_date.desc())
         .all()
     )

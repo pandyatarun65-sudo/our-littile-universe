@@ -30,3 +30,6 @@ Thumbs.db
 
 # --- temporary patch backups ---
 *_backup_before_phase*
+*_backup_*.py
+phase7c_backups/
+backup_olu.py
