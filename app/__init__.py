@@ -62,10 +62,7 @@ def create_app(config_class=None):
     app.register_blueprint(chat_bp)
     app.register_blueprint(notifications_bp)
 
-    # Lightweight route for UptimeRobot / cron-job.org (no login, no DB hit)
-    @app.route('/healthz')
-    def healthz():
-        return 'ok', 200
+   
 
     # Robust date formatter supporting strings, datetime, and date objects
     @app.template_filter('date_format')
