@@ -50,7 +50,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_DIR = os.path.abspath(os.environ.get('UPLOAD_DIR') or os.path.join(DATA_DIR, 'uploads'))
 
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+    MAX_CONTENT_LENGTH = 12 * 1024 * 1024
 
     DEBUG = False
     TESTING = False
