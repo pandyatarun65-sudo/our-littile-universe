@@ -15,8 +15,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Phase 6: presence. Updated by a small heartbeat ping from the chat page —
-    # no separate history table, just "when did we last hear from this browser".
+    # Phase 6: presence. Updated by a small heartbeat ping from the chat page.
     last_seen = db.Column(db.DateTime, nullable=True)
 
     # Relationships
@@ -59,7 +58,7 @@ class User(UserMixin, db.Model):
         return (datetime.now(timezone.utc) - seen).total_seconds() < 60
 
     def last_seen_label(self):
-        """A friendly string for the UI: 'Online', 'Just now', '5 min ago', etc."""
+        """A friendly string for the UI: 'Online', '5 min ago', etc."""
         if self.is_online:
             return 'Online'
         if not self.last_seen:
@@ -76,7 +75,7 @@ class User(UserMixin, db.Model):
         return f"Last seen {days}d ago"
 
     def __repr__(self):
-        return f''
+        return f'<User {self.username}>'
 
 
 class Memory(db.Model):
@@ -121,7 +120,7 @@ class Memory(db.Model):
         self.created_by = value
 
     def __repr__(self):
-        return f''
+        return f'<Memory {self.title}>'
 
 
 class Photo(db.Model):
@@ -166,7 +165,7 @@ class Photo(db.Model):
         self.uploaded_by = value
 
     def __repr__(self):
-        return f''
+        return f'<Photo {self.file_path}>'
 
 
 class SecretLetter(db.Model):
@@ -205,7 +204,7 @@ class SecretLetter(db.Model):
         return max(0, delta)
 
     def __repr__(self):
-        return f''
+        return f'<SecretLetter {self.title}>'
 
 
 class SpecialDate(db.Model):
@@ -289,8 +288,8 @@ class ChatMessage(db.Model):
     message_type = db.Column(db.String(20), nullable=False, default='text')
     body = db.Column(db.Text, nullable=True)  # empty for pure image/voice messages
 
-    # Relative path under a PRIVATE folder (NOT app/static/) — served only
-    # through the protected chat.media route, never a direct static URL.
+    # Storage key for the media file — served only through the protected
+    # chat.media route, never a direct static URL.
     media_path = db.Column(db.String(255), nullable=True)
     media_duration = db.Column(db.Integer, nullable=True)  # seconds, voice only
 
@@ -300,8 +299,7 @@ class ChatMessage(db.Model):
     delivered_at = db.Column(db.DateTime, nullable=True)
     seen_at = db.Column(db.DateTime, nullable=True)
 
-    # Soft delete: keeps the row (so replies pointing at it don't break),
-    # just hides the real content once "deleted".
+    # Soft delete: keeps the row so replies pointing at it don't break.
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
 
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
@@ -329,7 +327,7 @@ class ChatMessage(db.Model):
             self.seen_at = now
 
     def __repr__(self):
-        return f''
+        return f'<ChatMessage {self.id} {self.message_type}>'
 
 
 class Notification(db.Model):
@@ -371,4 +369,19 @@ class Notification(db.Model):
         return url_for(self.link_endpoint, **params)
 
     def __repr__(self):
-        return f''
+        return f'<Notification {self.id} {self.category}>'
+
+
+# ==================================================================
+# Private file storage inside the database (used when STORAGE_BUCKET is not set)
+# ==================================================================
+class MediaBlob(db.Model):
+    __tablename__ = 'media_blobs'
+
+    key = db.Column(db.String(255), primary_key=True)      # e.g. "uploads/abc123.jpg"
+    data = db.Column(db.LargeBinary, nullable=False)       # BYTEA on Neon
+    content_type = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<MediaBlob {self.key}>'
