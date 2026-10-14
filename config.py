@@ -49,7 +49,7 @@ class Config:
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_DIR = os.path.abspath(os.environ.get('UPLOAD_DIR') or os.path.join(DATA_DIR, 'uploads'))
-
+    MEDIA_BLOB_DIR = os.path.abspath(os.environ.get('MEDIA_BLOB_DIR') or os.path.join(DATA_DIR, 'media_blobs'))
     MAX_CONTENT_LENGTH = 12 * 1024 * 1024
 
     DEBUG = False

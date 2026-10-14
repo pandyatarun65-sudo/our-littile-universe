@@ -1,5 +1,6 @@
 import os
-from datetime import datetime, date
+import logging
+from datetime import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -22,7 +23,7 @@ def create_app(config_class=None):
     else:
         app.config.from_object(config_class)
 
-    os.makedirs(app.config.get('UPLOAD_FOLDER', 'app/static/uploads'), exist_ok=True)
+    os.makedirs(app.config.get('UPLOAD_DIR', 'instance/uploads'), exist_ok=True)
     os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
@@ -31,11 +32,20 @@ def create_app(config_class=None):
     login_manager.login_message = 'Please log in to enter our universe.'
     login_manager.login_message_category = 'info'
 
+    # Register all models (incl. MediaBlob) and create any missing tables.
+    # create_all() never touches existing tables or data.
+    with app.app_context():
+        from app import models  # noqa: F401
+        try:
+            db.create_all()
+        except Exception:
+            logging.getLogger(__name__).exception('db.create_all() failed')
+
     from app.models import User
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     # Register blueprints
     from app.auth.routes import auth_bp
@@ -51,6 +61,11 @@ def create_app(config_class=None):
     app.register_blueprint(smart_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(notifications_bp)
+
+    # Lightweight route for UptimeRobot / cron-job.org (no login, no DB hit)
+    @app.route('/healthz')
+    def healthz():
+        return 'ok', 200
 
     # Robust date formatter supporting strings, datetime, and date objects
     @app.template_filter('date_format')
