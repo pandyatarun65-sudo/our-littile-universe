@@ -230,3 +230,33 @@ def search():
         users=users, years=years,
         filters_used=filters_used, results=results,
     )
+
+@main_bp.route('/admin/shrink-media')
+@login_required
+def shrink_media():
+    """TEMPORARY: delete this whole function once it says Done."""
+    from flask import Response
+    from markupsafe import escape
+    from app import storage
+    from app.models import MediaBlob
+
+    after = request.args.get('after', '')
+    keys = [k for (k,) in db.session.query(MediaBlob.key)
+            .filter(MediaBlob.key > after).order_by(MediaBlob.key).limit(5)]
+    if not keys:
+        return 'Done. All stored images are shrunk. You can delete this route now.'
+
+    lines = []
+    for key in keys:
+        row = db.session.get(MediaBlob, key)
+        old = bytes(row.data)
+        new = storage._shrink_image(old, row.content_type, key)
+        if len(new) < len(old):
+            row.data = new
+            db.session.commit()
+        lines.append(f'{escape(key)}: {len(old) // 1024} KB -> {len(new) // 1024} KB')
+        db.session.expunge_all()
+
+    nxt = url_for('main.shrink_media', after=keys[-1])
+    html = f'<meta http-equiv="refresh" content="1;url={nxt}"><pre>' + '\n'.join(lines) + '\n\nContinuing...</pre>'
+    return Response(html, mimetype='text/html')

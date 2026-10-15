@@ -222,13 +222,11 @@ def media(message_id):
         abort(404)
     if message.is_deleted or not message.media_path or not MEDIA_NAME_RE.match(message.media_path):
         abort(404)
-        response = storage.send(f'chat/{message.media_path}',
+    response = storage.send(f'chat/{message.media_path}',
                             MIME_BY_EXT.get(media_ext(message.media_path)))
     if response is None:
         abort(404)
     return response
-
-
 # ------------------------------------------------------------------ search
 @chat_bp.route('/chat/search')
 @login_required
